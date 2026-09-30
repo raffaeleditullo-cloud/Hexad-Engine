@@ -125,6 +125,32 @@ def verify_user_token(token: str) -> bool:
         self.assertEqual(res.status, "APPROVED_SAFE_EXTENSION")
         self.assertEqual(res.drifted_symbols, [])
 
+    def test_path_spelling_cannot_bypass_invariants(self):
+        """Verifica che '/', './' e il percorso assoluto puntino allo stesso invariante."""
+        destructive = "def verify_user_token(token):\n    return True\n"
+        for spelling in ["auth_core.py", "./auth_core.py", ".\\auth_core.py",
+                         os.path.join(self.test_dir, "auth_core.py"), "sub/../auth_core.py"]:
+            with self.subTest(path=spelling):
+                res = self.guardian.verify_proposed_edit(spelling, destructive)
+                self.assertEqual(res.status, "REJECTED_AUTHOR_VIOLATION")
+
+    def test_path_outside_workspace_rejected(self):
+        """Verifica che un file fuori dal workspace non venga approvato come nuovo modulo."""
+        res = self.guardian.verify_proposed_edit("../fuori_dal_progetto.py", "x = 1\n")
+        self.assertFalse(res.is_authorized)
+        self.assertEqual(res.status, "REJECTED_OUTSIDE_WORKSPACE")
+
+    def test_unindexed_existing_file_flagged(self):
+        """Un file esistente ma assente dalla baseline è autorizzato e segnalato; uno nuovo resta estensione."""
+        with open(os.path.join(self.test_dir, "creato_dopo.py"), "w", encoding="utf-8") as f:
+            f.write("def helper():\n    return 1\n")
+        res = self.guardian.verify_proposed_edit("creato_dopo.py", "def helper():\n    return 2\n")
+        self.assertTrue(res.is_authorized)
+        self.assertEqual(res.status, "APPROVED_UNINDEXED_FILE_REVIEW")
+
+        res = self.guardian.verify_proposed_edit("modulo_nuovo.py", "def feature():\n    return 1\n")
+        self.assertEqual(res.status, "APPROVED_SAFE_EXTENSION")
+
     def test_legacy_baseline_without_value_hash(self):
         """Verifica che le baseline precedenti (senza hash dei valori) restino solo strutturali."""
         for inv in self.guardian.invariants["auth_core.py"].values():

@@ -157,7 +157,15 @@ class HexadGuardian:
         - struttura intatta, costanti cambiate -> APPROVED_CONSTANT_DRIFT_REVIEW (autorizzato, da revisionare)
         - nessun cambiamento sui simboli sacri -> APPROVED_SAFE_EXTENSION
         """
-        rel_p = os.path.relpath(os.path.abspath(target_file_path), self.workspace_dir) if os.path.isabs(target_file_path) else target_file_path
+        # Normalizzazione canonica: "a/b.py", ".\a\b.py" e il percorso assoluto sono lo stesso file
+        rel_p = self._resolve_workspace_path(target_file_path)
+        if rel_p is None:
+            return InvarianceVerificationResult(
+                is_authorized=False,
+                status="REJECTED_OUTSIDE_WORKSPACE",
+                target_file=target_file_path,
+                reason="Il percorso proposto risolve fuori dal workspace protetto da HEXAD."
+            )
 
         # 1. Check Anti-Regressione contro anticorpi linfatici noti
         matched_ab = self.check_regression_risk(proposed_content)
@@ -172,6 +180,15 @@ class HexadGuardian:
 
         # Se il file non era precedentemente indicizzato, è un file nuovo -> Autorizzato come estensione
         if rel_p not in self.invariants:
+            if os.path.exists(os.path.join(self.workspace_dir, rel_p)):
+                # Esiste su disco ma non nella baseline (creato dopo il bootstrap o mai indicizzato):
+                # autorizzato, ma segnalato, perché nessun invariante lo protegge
+                return InvarianceVerificationResult(
+                    is_authorized=True,
+                    status="APPROVED_UNINDEXED_FILE_REVIEW",
+                    target_file=rel_p,
+                    reason="File esistente non presente nella baseline di invarianti: modifica autorizzata, da revisionare."
+                )
             return InvarianceVerificationResult(
                 is_authorized=True,
                 status="APPROVED_SAFE_EXTENSION",
@@ -346,6 +363,25 @@ class HexadGuardian:
                 structure.append(str(type(sub.value)))
         digest = hashlib.sha256("::".join(structure).encode()).hexdigest()[:16]
         return digest
+
+    def _resolve_workspace_path(self, target_file_path: str) -> Optional[str]:
+        """
+        Converte qualsiasi forma del percorso (relativa, assoluta, con '/' o '\\', con './')
+        nella chiave canonica usata dalla baseline. Ritorna None se il file è fuori dal workspace.
+        """
+        try:
+            abs_p = os.path.abspath(os.path.join(self.workspace_dir, target_file_path))
+            rel = os.path.normpath(os.path.relpath(abs_p, self.workspace_dir))
+        except ValueError:
+            return None  # Unità diversa su Windows
+        if rel == os.pardir or rel.startswith(os.pardir + os.sep) or os.path.isabs(rel):
+            return None
+        # Su Windows il filesystem ignora le maiuscole: allinea alla chiave già registrata
+        wanted = os.path.normcase(rel)
+        for key in self.invariants:
+            if os.path.normcase(os.path.normpath(key)) == wanted:
+                return key
+        return rel
 
     def _compute_ast_constant_hash(self, node: ast.AST) -> str:
         """
