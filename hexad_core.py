@@ -251,12 +251,9 @@ class HexadOracle:
                 excluded_branches.append(chosen_branch_id)
                 retries += 1
                 continue
+            # Il gateway vocale (route_command) non è invocato qui: invierebbe il comando alla
+            # ricerca web o eseguirebbe le proprie ipotesi predefinite, senza influire sul verdetto
             audit_log.append(f"[5. DEMON] Gate ALLOW ({verdict.latency_ms:.3f} ms)")
-
-            # 5b. DEMON: Muscle Enclave Actuation (telemetria del gateway)
-            if self.demon:
-                d_res = self.demon.route_command(chosen_command)
-                audit_log.append(f"[5. DEMON] Gateway OS: status='{d_res.get('status')}' (Blast Radius=0.0)")
 
             # 6. PEIRA: Physical Silicon Impact
             if self.peira:
