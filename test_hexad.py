@@ -182,6 +182,50 @@ class TestHexadOracleCycle(unittest.TestCase):
         )
         self.assertIn(res["status"], ["HEXAD_CONVERGENCE_SUCCESS", "HEXAD_CYCLE_TERMINATED"])
 
+    def _isolated_oracle(self):
+        ws = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, ws, True)
+        return HexadOracle(workspace_dir=ws)
+
+    def test_failed_branch_excluded_and_alternative_used(self):
+        """Verifica che il ramo fratturato da PEIRA venga escluso e il ciclo passi al ramo successivo."""
+        oracle = self._isolated_oracle()
+        traces = [
+            {"id": "branch_crash", "command": "python -c \"import sys; sys.exit(3)\"", "entropies": [0.1]},
+            {"id": "branch_ok", "command": "python -c \"print('ALTERNATIVE OK')\"", "entropies": [0.3]},
+        ]
+        res = oracle.execute_cybernetic_cycle("Verify fallback", candidate_traces=traces)
+        self.assertEqual(res["status"], "HEXAD_CONVERGENCE_SUCCESS")
+        self.assertEqual(res["cycles_used"], 2)
+        self.assertIn("ALTERNATIVE OK", res["output"])
+
+    def test_halts_without_repeating_failed_command(self):
+        """Verifica che, senza alternative, il ciclo si arresti dopo un solo tentativo."""
+        oracle = self._isolated_oracle()
+        traces = [{"id": "only_branch", "command": "python -c \"import sys; sys.exit(3)\"", "entropies": [0.1]}]
+        res = oracle.execute_cybernetic_cycle("Verify halt", candidate_traces=traces, max_retries=2)
+        self.assertEqual(res["status"], "HEXAD_HALTED_NO_ALTERNATIVES")
+        self.assertEqual(res["excluded_branches"], ["only_branch"])
+        self.assertEqual(res["last_fracture"]["exit_code"], 3)
+        self.assertEqual(sum("[6. PEIRA] Responso" in line for line in res["audit_trail"]), 1)
+
+    def test_demon_gate_blocks_before_peira(self):
+        """Verifica che un comando bloccato da DEMON non raggiunga mai PEIRA."""
+        oracle = self._isolated_oracle()
+        # Innocuo se eseguito (è solo un echo), ma riconosciuto dal gate come distruzione di database
+        traces = [{"id": "branch_drop", "command": "echo DROP TABLE users", "entropies": [0.1]}]
+        res = oracle.execute_cybernetic_cycle("Verify gate", candidate_traces=traces)
+        self.assertEqual(res["status"], "HEXAD_HALTED_NO_ALTERNATIVES")
+        self.assertTrue(any("Gate BLOCK" in line for line in res["audit_trail"]))
+        self.assertFalse(any("[6. PEIRA]" in line for line in res["audit_trail"]))
+
+    def test_no_candidates_is_not_a_success(self):
+        """Verifica che senza rami candidati non venga eseguito alcun segnaposto né dichiarato successo."""
+        oracle = self._isolated_oracle()
+        res = oracle.execute_cybernetic_cycle("Nothing to do", candidate_traces=None)
+        self.assertEqual(res["status"], "HEXAD_NO_CANDIDATES")
+        self.assertFalse(any("[6. PEIRA]" in line for line in res["audit_trail"]))
+
 
 if __name__ == "__main__":
     unittest.main()
