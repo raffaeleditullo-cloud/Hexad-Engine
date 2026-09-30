@@ -147,6 +147,24 @@ def main():
                             "type": "object",
                             "properties": {}
                         }
+                    },
+                    {
+                        "name": "hexad_export_portable_skill",
+                        "description": "Exports the portable universal HEXAD Skill for ChatGPT, Cursor (.cursorrules), Claude, or Markdown with toggleable ON/OFF mechanics.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "target_format": {
+                                    "type": "string",
+                                    "enum": ["chatgpt", "cursor", "claude", "markdown"],
+                                    "description": "Target environment for the skill."
+                                },
+                                "save_to_workspace": {
+                                    "type": "boolean",
+                                    "description": "If true, saves the skill directly to the workspace (e.g. as .cursorrules or HEXAD_SKILL.md)."
+                                }
+                            }
+                        }
                     }
                 ]
                 sys.stdout.write(json.dumps(create_mcp_response(msg_id, {"tools": tools})) + "\n")
@@ -239,6 +257,46 @@ def main():
                     }
                     sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
                         "content": [{"type": "text", "text": json.dumps(telemetry, indent=2)}]
+                    })) + "\n")
+                    sys.stdout.flush()
+
+                elif tool_name == "hexad_export_portable_skill":
+                    fmt = args.get("target_format", "markdown")
+                    save_ws = bool(args.get("save_to_workspace", False))
+
+                    skill_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "HEXAD_SKILL.md")
+                    skill_content = ""
+                    if os.path.exists(skill_path):
+                        with open(skill_path, "r", encoding="utf-8") as sf:
+                            skill_content = sf.read()
+                    else:
+                        skill_content = "# HEXAD Universal Skill\nUse /hexad on to activate, /hexad off to deactivate."
+
+                    written_file = None
+                    if save_ws:
+                        if fmt == "cursor":
+                            dest = os.path.join(oracle.workspace_dir, ".cursorrules")
+                        else:
+                            dest = os.path.join(oracle.workspace_dir, "HEXAD_SKILL.md")
+                        with open(dest, "w", encoding="utf-8") as df:
+                            df.write(skill_content)
+                        written_file = dest
+
+                    export_result = {
+                        "status": "SKILL_EXPORTED",
+                        "format": fmt,
+                        "toggle_commands": {
+                            "activate": "/hexad on (o HEXAD: ACTIVATE)",
+                            "deactivate": "/hexad off (o HEXAD: DEACTIVATE)",
+                            "status": "/hexad status",
+                            "override": "/hexad override <function_name>"
+                        },
+                        "saved_to_workspace_file": written_file,
+                        "skill_text": skill_content
+                    }
+
+                    sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
+                        "content": [{"type": "text", "text": json.dumps(export_result, indent=2)}]
                     })) + "\n")
                     sys.stdout.flush()
 
