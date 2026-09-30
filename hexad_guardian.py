@@ -31,16 +31,18 @@ class AuthorInvariant:
     docstring: Optional[str] = None
     criticality: str = "SOVEREIGN_CORE" # "SOVEREIGN_CORE" | "EXTENSION_PERMITTED"
     registered_at: float = field(default_factory=time.time)
+    constant_value_hash: Optional[str] = None  # Hash dei valori costanti (None nelle baseline precedenti)
 
 
 @dataclass
 class InvarianceVerificationResult:
     """Esito del controllo pre-flight di invarianza prima della scrittura su disco."""
     is_authorized: bool
-    status: str                  # "APPROVED_SAFE_EXTENSION", "APPROVED_SOVEREIGN_OVERRIDE", "REJECTED_AUTHOR_VIOLATION"
+    status: str                  # "APPROVED_SAFE_EXTENSION", "APPROVED_CONSTANT_DRIFT_REVIEW", "APPROVED_SOVEREIGN_OVERRIDE", "REJECTED_AUTHOR_VIOLATION"
     target_file: str
     violated_symbols: List[str] = field(default_factory=list)
     added_symbols: List[str] = field(default_factory=list)
+    drifted_symbols: List[str] = field(default_factory=list)  # Struttura intatta, valori costanti cambiati
     reason: Optional[str] = None
     quarantine_matched: Optional[str] = None
 
@@ -149,6 +151,11 @@ class HexadGuardian:
         1. Se il codice proposto contiene pattern di bug già registrati (Anti-Regressione).
         2. Se il codice proposto sovrascrive o cancella funzioni protette dell'autore.
         3. Autorizza solo estensioni sicure o modifiche esplicitamente ordinate dall'autore.
+
+        Soglia graduata:
+        - struttura AST cambiata              -> REJECTED_AUTHOR_VIOLATION (salvo override)
+        - struttura intatta, costanti cambiate -> APPROVED_CONSTANT_DRIFT_REVIEW (autorizzato, da revisionare)
+        - nessun cambiamento sui simboli sacri -> APPROVED_SAFE_EXTENSION
         """
         rel_p = os.path.relpath(os.path.abspath(target_file_path), self.workspace_dir) if os.path.isabs(target_file_path) else target_file_path
 
@@ -184,15 +191,18 @@ class HexadGuardian:
             )
 
         proposed_symbols: Dict[str, str] = {} # sym_name -> ast_hash
+        proposed_values: Dict[str, str] = {}  # sym_name -> hash dei valori costanti
         for node in ast.walk(proposed_tree):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
                 h = self._compute_ast_structural_hash(node)
                 proposed_symbols[node.name] = h
+                proposed_values[node.name] = self._compute_ast_constant_hash(node)
 
         # 3. Analisi delle alterazioni rispetto agli invarianti dell'autore
         protected_syms = self.invariants[rel_p]
         violated_symbols = []
         added_symbols = []
+        drifted_symbols = []
 
         for name, inv in protected_syms.items():
             if inv.criticality == "SOVEREIGN_CORE":
@@ -202,6 +212,9 @@ class HexadGuardian:
                 elif proposed_symbols[name] != inv.ast_structural_hash:
                     # Funzione alterata nella sua logica interna!
                     violated_symbols.append(f"{name} [LOGIC_MUTATED]")
+                elif inv.constant_value_hash and proposed_values[name] != inv.constant_value_hash:
+                    # Struttura intatta ma soglie, default o letterali cambiati
+                    drifted_symbols.append(f"{name} [CONSTANT_DRIFT]")
 
         for name in proposed_symbols:
             if name not in protected_syms:
@@ -220,6 +233,7 @@ class HexadGuardian:
                     target_file=rel_p,
                     violated_symbols=violated_symbols,
                     added_symbols=added_symbols,
+                    drifted_symbols=drifted_symbols,
                     reason="Modifica autorizzata esplicitamente dal prompt dell'autore umano."
                 )
             else:
@@ -230,11 +244,26 @@ class HexadGuardian:
                     target_file=rel_p,
                     violated_symbols=violated_symbols,
                     added_symbols=added_symbols,
+                    drifted_symbols=drifted_symbols,
                     reason=(
                         f"TENTATIVO DI MANOMISSIONE NON AUTORIZZATO: Le seguenti logiche dell'autore sono state alterate senza permesso esplicito: {', '.join(violated_symbols)}. "
                         f"L'azione è stata bloccata per preservare l'integrità del progetto."
                     )
                 )
+
+        if drifted_symbols:
+            # Soglia intermedia: la logica resta quella dell'autore, ma i valori vanno revisionati
+            return InvarianceVerificationResult(
+                is_authorized=True,
+                status="APPROVED_CONSTANT_DRIFT_REVIEW",
+                target_file=rel_p,
+                added_symbols=added_symbols,
+                drifted_symbols=drifted_symbols,
+                reason=(
+                    f"Struttura delle logiche dell'autore intatta, ma valori costanti modificati in: {', '.join(drifted_symbols)}. "
+                    f"Modifica autorizzata, da sottoporre a revisione umana (soglie, default, letterali)."
+                )
+            )
 
         return InvarianceVerificationResult(
             is_authorized=True,
@@ -297,7 +326,8 @@ class HexadGuardian:
                         arg_signature=args,
                         ast_structural_hash=h,
                         docstring=ast.get_docstring(node),
-                        criticality="SOVEREIGN_CORE"
+                        criticality="SOVEREIGN_CORE",
+                        constant_value_hash=self._compute_ast_constant_hash(node)
                     )
         except Exception:
             pass
@@ -316,6 +346,25 @@ class HexadGuardian:
                 structure.append(str(type(sub.value)))
         digest = hashlib.sha256("::".join(structure).encode()).hexdigest()[:16]
         return digest
+
+    def _compute_ast_constant_hash(self, node: ast.AST) -> str:
+        """
+        Hash dei valori costanti del nodo (numeri, booleani, None, stringhe, default degli argomenti),
+        complementare all'hash strutturale che registra solo il tipo delle costanti.
+        Le docstring sono escluse: modificarle non altera la logica.
+        """
+        docstring_ids = set()
+        for sub in ast.walk(node):
+            if isinstance(sub, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and sub.body:
+                first = sub.body[0]
+                if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant) and isinstance(first.value.value, str):
+                    docstring_ids.add(id(first.value))
+
+        values = []
+        for sub in ast.walk(node):
+            if isinstance(sub, ast.Constant) and id(sub) not in docstring_ids:
+                values.append(f"{type(sub.value).__name__}:{sub.value!r}")
+        return hashlib.sha256("::".join(values).encode()).hexdigest()[:16]
 
     def _check_explicit_intent(self, prompt: str, rel_file: str, violated_syms: List[str]) -> bool:
         """Verifica se l'umano ha espressamente ordinato di modificare il file o il simbolo."""

@@ -207,6 +207,7 @@ def main():
                         "target_file": v_res.target_file,
                         "violated_symbols": v_res.violated_symbols,
                         "added_symbols": v_res.added_symbols,
+                        "drifted_symbols": v_res.drifted_symbols,
                         "reason": v_res.reason,
                         "quarantine_matched": v_res.quarantine_matched
                     }

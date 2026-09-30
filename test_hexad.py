@@ -97,6 +97,48 @@ def parse_token():
         self.assertEqual(res.status, "REJECTED_REGRESSION_DETECTED")
         self.assertEqual(res.quarantine_matched, "BAD_DEPRECATED_TOKEN_HASH")
 
+    def test_constant_drift_graduated_review(self):
+        """Verifica che una soglia cambiata a struttura intatta sia autorizzata ma segnalata per revisione."""
+        threshold_edit = """
+def verify_user_token(token: str) -> bool:
+    '''Logica sacra dell'autore per validare il token.'''
+    if not token or len(token) < 4:
+        return False
+    return token.startswith("AUTH_")
+"""
+        res = self.guardian.verify_proposed_edit("auth_core.py", threshold_edit)
+        self.assertTrue(res.is_authorized)
+        self.assertEqual(res.status, "APPROVED_CONSTANT_DRIFT_REVIEW")
+        self.assertIn("verify_user_token [CONSTANT_DRIFT]", res.drifted_symbols)
+        self.assertEqual(res.violated_symbols, [])
+
+    def test_docstring_change_is_not_drift(self):
+        """Verifica che modificare solo la docstring non conti come deriva delle costanti."""
+        doc_edit = """
+def verify_user_token(token: str) -> bool:
+    '''Docstring riscritta: la logica resta identica.'''
+    if not token or len(token) < 10:
+        return False
+    return token.startswith("AUTH_")
+"""
+        res = self.guardian.verify_proposed_edit("auth_core.py", doc_edit)
+        self.assertEqual(res.status, "APPROVED_SAFE_EXTENSION")
+        self.assertEqual(res.drifted_symbols, [])
+
+    def test_legacy_baseline_without_value_hash(self):
+        """Verifica che le baseline precedenti (senza hash dei valori) restino solo strutturali."""
+        for inv in self.guardian.invariants["auth_core.py"].values():
+            inv.constant_value_hash = None
+        threshold_edit = """
+def verify_user_token(token: str) -> bool:
+    '''Logica sacra dell'autore per validare il token.'''
+    if not token or len(token) < 4:
+        return False
+    return token.startswith("AUTH_")
+"""
+        res = self.guardian.verify_proposed_edit("auth_core.py", threshold_edit)
+        self.assertEqual(res.status, "APPROVED_SAFE_EXTENSION")
+
 
 class TestHexadOracleCycle(unittest.TestCase):
     def test_oracle_lifecycle_execution(self):
