@@ -185,7 +185,11 @@ class TestHexadOracleCycle(unittest.TestCase):
     def _isolated_oracle(self):
         ws = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, ws, True)
-        return HexadOracle(workspace_dir=ws)
+        oracle = HexadOracle(workspace_dir=ws)
+        if oracle.coris:
+            # Gli anticorpi dei crash di prova restano nel workspace temporaneo, non in Coris-Engine
+            oracle.coris = type(oracle.coris)(immune_store_path=os.path.join(ws, "immune_memory.json"))
+        return oracle
 
     def test_failed_branch_excluded_and_alternative_used(self):
         """Verifica che il ramo fratturato da PEIRA venga escluso e il ciclo passi al ramo successivo."""
