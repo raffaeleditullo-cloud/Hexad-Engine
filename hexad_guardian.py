@@ -1,0 +1,339 @@
+"""
+HEXAD Guardian: The Sovereign Lock, AST Digest & Author Invariance Engine.
+
+Protects author-defined architecture and core functions from unauthorized LLM mutation.
+Enforces the Sovereign Invariant Principle:
+1. Author's core functions are immutable by default (SOVEREIGN_CORE).
+2. Safe extensions and additions are permitted (EXTENSION_PERMITTED).
+3. Resolved bugs are permanently quarantined as immune antibodies (ANTI_REGRESSION).
+"""
+
+import os
+import sys
+import ast
+import json
+import hashlib
+import time
+from dataclasses import dataclass, field, asdict
+from typing import Dict, List, Any, Optional, Tuple, Set
+
+
+@dataclass
+class AuthorInvariant:
+    """Rappresentazione immutabile di una funzione o classe dell'autore."""
+    symbol_name: str
+    file_path: str
+    kind: str                    # "function", "async_function", "class"
+    line_start: int
+    line_end: int
+    arg_signature: List[str]
+    ast_structural_hash: str     # Hash semantico dell'albero sintattico
+    docstring: Optional[str] = None
+    criticality: str = "SOVEREIGN_CORE" # "SOVEREIGN_CORE" | "EXTENSION_PERMITTED"
+    registered_at: float = field(default_factory=time.time)
+
+
+@dataclass
+class InvarianceVerificationResult:
+    """Esito del controllo pre-flight di invarianza prima della scrittura su disco."""
+    is_authorized: bool
+    status: str                  # "APPROVED_SAFE_EXTENSION", "APPROVED_SOVEREIGN_OVERRIDE", "REJECTED_AUTHOR_VIOLATION"
+    target_file: str
+    violated_symbols: List[str] = field(default_factory=list)
+    added_symbols: List[str] = field(default_factory=list)
+    reason: Optional[str] = None
+    quarantine_matched: Optional[str] = None
+
+
+class HexadGuardian:
+    """
+    Il Guardiano Cibernetico del DNA del Progetto.
+    Impedisce allucinazioni distruttive e garantisce che le logiche dell'autore non vengano toccate.
+    """
+
+    def __init__(self, workspace_dir: str):
+        self.workspace_dir = os.path.abspath(workspace_dir)
+        self.hexad_dir = os.path.join(self.workspace_dir, ".hexad")
+        self.invariants_file = os.path.join(self.hexad_dir, "invariants.json")
+        self.antibodies_file = os.path.join(self.hexad_dir, "antibodies.json")
+        self.invariants: Dict[str, Dict[str, AuthorInvariant]] = {} # file -> symbol -> AuthorInvariant
+        self.antibodies: List[Dict[str, Any]] = []
+
+        self._ensure_storage()
+        self._load_state()
+
+    def _ensure_storage(self):
+        os.makedirs(self.hexad_dir, exist_ok=True)
+
+    def _load_state(self):
+        # Carica invarianti
+        if os.path.exists(self.invariants_file):
+            try:
+                with open(self.invariants_file, "r", encoding="utf-8") as f:
+                    raw = json.load(f)
+                    for file_rel, syms in raw.items():
+                        self.invariants[file_rel] = {}
+                        for sym_name, s_data in syms.items():
+                            self.invariants[file_rel][sym_name] = AuthorInvariant(**s_data)
+            except Exception:
+                pass
+
+        # Carica anticorpi anti-regressione
+        if os.path.exists(self.antibodies_file):
+            try:
+                with open(self.antibodies_file, "r", encoding="utf-8") as f:
+                    self.antibodies = json.load(f)
+            except Exception:
+                pass
+
+    def _save_state(self):
+        # Salva invarianti
+        serializable = {}
+        for f_path, syms in self.invariants.items():
+            serializable[f_path] = {s_name: asdict(inv) for s_name, inv in syms.items()}
+        with open(self.invariants_file, "w", encoding="utf-8") as f:
+            json.dump(serializable, f, indent=2)
+
+        # Salva anticorpi
+        with open(self.antibodies_file, "w", encoding="utf-8") as f:
+            json.dump(self.antibodies, f, indent=2)
+
+    # =========================================================================
+    # 1. BOOTSTRAP DEL PROGETTO: Mappatura del DNA dell'Autore
+    # =========================================================================
+    def bootstrap_project(self, force_refresh: bool = False) -> Dict[str, Any]:
+        """
+        Scansiona l'intero repository, estrae l'AST di ogni file Python e blocca
+        le funzioni dell'autore come nodi sacri invarianti.
+        """
+        indexed_files = 0
+        indexed_symbols = 0
+
+        for root, dirs, files in os.walk(self.workspace_dir):
+            if any(ign in root for ign in [".git", ".hexad", "__pycache__", "node_modules", "venv", ".venv"]):
+                continue
+            for file in files:
+                if file.endswith(".py"):
+                    full_p = os.path.join(root, file)
+                    rel_p = os.path.relpath(full_p, self.workspace_dir)
+
+                    if rel_p not in self.invariants or force_refresh:
+                        syms = self._extract_ast_invariants(full_p, rel_p)
+                        if syms:
+                            self.invariants[rel_p] = syms
+                            indexed_files += 1
+                            indexed_symbols += len(syms)
+
+        self._save_state()
+
+        return {
+            "status": "BOOTSTRAP_COMPLETE",
+            "workspace": self.workspace_dir,
+            "indexed_files": indexed_files,
+            "total_invariants_protected": sum(len(s) for s in self.invariants.values()),
+            "storage_path": self.invariants_file
+        }
+
+    # =========================================================================
+    # 2. VERIFICA DI INVARIANZA PRE-FLIGHT (Il Filtro Sovrano)
+    # =========================================================================
+    def verify_proposed_edit(
+        self,
+        target_file_path: str,
+        proposed_content: str,
+        user_prompt: str = "",
+        explicit_override: bool = False
+    ) -> InvarianceVerificationResult:
+        """
+        Controlla prima della scrittura:
+        1. Se il codice proposto contiene pattern di bug già registrati (Anti-Regressione).
+        2. Se il codice proposto sovrascrive o cancella funzioni protette dell'autore.
+        3. Autorizza solo estensioni sicure o modifiche esplicitamente ordinate dall'autore.
+        """
+        rel_p = os.path.relpath(os.path.abspath(target_file_path), self.workspace_dir) if os.path.isabs(target_file_path) else target_file_path
+
+        # 1. Check Anti-Regressione contro anticorpi linfatici noti
+        matched_ab = self.check_regression_risk(proposed_content)
+        if matched_ab:
+            return InvarianceVerificationResult(
+                is_authorized=False,
+                status="REJECTED_REGRESSION_DETECTED",
+                target_file=rel_p,
+                reason=f"ANTI-REGRESSION BLOCKED: Rilevato pattern di bug già risolto in passato ({matched_ab.get('signature')}).",
+                quarantine_matched=matched_ab.get("signature")
+            )
+
+        # Se il file non era precedentemente indicizzato, è un file nuovo -> Autorizzato come estensione
+        if rel_p not in self.invariants:
+            return InvarianceVerificationResult(
+                is_authorized=True,
+                status="APPROVED_SAFE_EXTENSION",
+                target_file=rel_p,
+                reason="Nuovo file o modulo non appartenente al core primario dell'autore."
+            )
+
+        # 2. Parsing AST del codice proposto
+        try:
+            proposed_tree = ast.parse(proposed_content, filename=rel_p)
+        except SyntaxError as se:
+            return InvarianceVerificationResult(
+                is_authorized=False,
+                status="REJECTED_SYNTAX_ERROR",
+                target_file=rel_p,
+                reason=f"Errore di sintassi nel codice proposto: riga {se.lineno}: {se.msg}"
+            )
+
+        proposed_symbols: Dict[str, str] = {} # sym_name -> ast_hash
+        for node in ast.walk(proposed_tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                h = self._compute_ast_structural_hash(node)
+                proposed_symbols[node.name] = h
+
+        # 3. Analisi delle alterazioni rispetto agli invarianti dell'autore
+        protected_syms = self.invariants[rel_p]
+        violated_symbols = []
+        added_symbols = []
+
+        for name, inv in protected_syms.items():
+            if inv.criticality == "SOVEREIGN_CORE":
+                if name not in proposed_symbols:
+                    # Funzione cancellata!
+                    violated_symbols.append(f"{name} [DELETED]")
+                elif proposed_symbols[name] != inv.ast_structural_hash:
+                    # Funzione alterata nella sua logica interna!
+                    violated_symbols.append(f"{name} [LOGIC_MUTATED]")
+
+        for name in proposed_symbols:
+            if name not in protected_syms:
+                added_symbols.append(name)
+
+        # 4. Verdetto di Sovranità
+        if violated_symbols:
+            # Controllo se l'utente ha chiesto esplicitamente di toccare questo file/funzione
+            user_has_authorized = explicit_override or self._check_explicit_intent(user_prompt, rel_p, violated_symbols)
+
+            if user_has_authorized:
+                # Sovranità umana esplicita: l'autore ha ordinato la modifica
+                return InvarianceVerificationResult(
+                    is_authorized=True,
+                    status="APPROVED_SOVEREIGN_OVERRIDE",
+                    target_file=rel_p,
+                    violated_symbols=violated_symbols,
+                    added_symbols=added_symbols,
+                    reason="Modifica autorizzata esplicitamente dal prompt dell'autore umano."
+                )
+            else:
+                # VIOLAZIONE: L'AI ha cercato di cambiare la logica di testa sua
+                return InvarianceVerificationResult(
+                    is_authorized=False,
+                    status="REJECTED_AUTHOR_VIOLATION",
+                    target_file=rel_p,
+                    violated_symbols=violated_symbols,
+                    added_symbols=added_symbols,
+                    reason=(
+                        f"TENTATIVO DI MANOMISSIONE NON AUTORIZZATO: Le seguenti logiche dell'autore sono state alterate senza permesso esplicito: {', '.join(violated_symbols)}. "
+                        f"L'azione è stata bloccata per preservare l'integrità del progetto."
+                    )
+                )
+
+        return InvarianceVerificationResult(
+            is_authorized=True,
+            status="APPROVED_SAFE_EXTENSION",
+            target_file=rel_p,
+            added_symbols=added_symbols,
+            reason="Tutte le logiche dell'autore sono state preservate intatte."
+        )
+
+    # =========================================================================
+    # 3. MEMORIA LINFATICA ANTI-REGRESSIONE (Coris/Peira Bridge)
+    # =========================================================================
+    def quarantine_regression(
+        self,
+        signature: str,
+        failure_trace: str,
+        neutralization_rule: str = "BLOCK_IDENTICAL_PATTERN"
+    ) -> Dict[str, Any]:
+        """Registra un bug risolto per bloccarlo per sempre da future generazioni."""
+        ab = {
+            "signature": signature,
+            "failure_trace": failure_trace[:300],
+            "rule": neutralization_rule,
+            "created_at": time.time()
+        }
+        self.antibodies.append(ab)
+        self._save_state()
+        return ab
+
+    def check_regression_risk(self, code_snippet: str) -> Optional[Dict[str, Any]]:
+        """Rileva se uno snippet contiene un pattern noto di fallimento pregresso."""
+        for ab in self.antibodies:
+            sig = ab.get("signature", "")
+            if sig and (sig in code_snippet or hashlib.sha256(code_snippet.encode()).hexdigest()[:12] == sig):
+                return ab
+        return None
+
+    # =========================================================================
+    # METODI AUSILIARI DI HASHING SEMANTICO
+    # =========================================================================
+    def _extract_ast_invariants(self, file_path: str, rel_path: str) -> Dict[str, AuthorInvariant]:
+        invariants = {}
+        try:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                content = f.read()
+            tree = ast.parse(content, filename=file_path)
+
+            for node in ast.iter_child_nodes(tree):
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                    kind = "class" if isinstance(node, ast.ClassDef) else ("async_function" if isinstance(node, ast.AsyncFunctionDef) else "function")
+                    args = [a.arg for a in getattr(node, "args", ast.arguments()).args] if hasattr(node, "args") else []
+                    h = self._compute_ast_structural_hash(node)
+
+                    invariants[node.name] = AuthorInvariant(
+                        symbol_name=node.name,
+                        file_path=rel_path,
+                        kind=kind,
+                        line_start=node.lineno,
+                        line_end=getattr(node, "end_lineno", node.lineno + 10),
+                        arg_signature=args,
+                        ast_structural_hash=h,
+                        docstring=ast.get_docstring(node),
+                        criticality="SOVEREIGN_CORE"
+                    )
+        except Exception:
+            pass
+        return invariants
+
+    def _compute_ast_structural_hash(self, node: ast.AST) -> str:
+        """Calcola un hash canonico della struttura dei nodi AST (indipendente da spaziature)."""
+        structure = []
+        for sub in ast.walk(node):
+            structure.append(sub.__class__.__name__)
+            if isinstance(sub, ast.Name):
+                structure.append(sub.id)
+            elif isinstance(sub, ast.Attribute):
+                structure.append(sub.attr)
+            elif isinstance(sub, ast.Constant):
+                structure.append(str(type(sub.value)))
+        digest = hashlib.sha256("::".join(structure).encode()).hexdigest()[:16]
+        return digest
+
+    def _check_explicit_intent(self, prompt: str, rel_file: str, violated_syms: List[str]) -> bool:
+        """Verifica se l'umano ha espressamente ordinato di modificare il file o il simbolo."""
+        if not prompt:
+            return False
+        p_lower = prompt.lower()
+        file_base = os.path.basename(rel_file).lower()
+
+        # Parole chiave di intenzione di modifica
+        change_verbs = ["modifica", "cambia", "aggiorna", "refactor", "riscrivi", "delete", "remove", "update", "rewrite", "fix", "correggi"]
+        has_change_verb = any(v in p_lower for v in change_verbs)
+
+        if has_change_verb:
+            if file_base in p_lower:
+                return True
+            for sym in violated_syms:
+                clean_sym = sym.split()[0].lower()
+                if clean_sym in p_lower:
+                    return True
+
+        return False

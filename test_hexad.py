@@ -1,0 +1,119 @@
+"""
+Unit and Integration Test Suite for HEXAD Engine.
+Verifies author invariance protection, safe extension allowance,
+anti-regression quarantine, and full closed-loop cybernetic execution.
+"""
+
+import os
+import sys
+import unittest
+import tempfile
+import shutil
+from hexad_guardian import HexadGuardian
+from hexad_core import HexadOracle
+
+
+class TestHexadGuardian(unittest.TestCase):
+    def setUp(self):
+        self.test_dir = tempfile.mkdtemp()
+        self.sample_file = os.path.join(self.test_dir, "auth_core.py")
+        with open(self.sample_file, "w", encoding="utf-8") as f:
+            f.write("""
+def verify_user_token(token: str) -> bool:
+    '''Logica sacra dell'autore per validare il token.'''
+    if not token or len(token) < 10:
+        return False
+    return token.startswith("AUTH_")
+""")
+        self.guardian = HexadGuardian(self.test_dir)
+        self.guardian.bootstrap_project()
+
+    def tearDown(self):
+        shutil.rmtree(self.test_dir, ignore_errors=True)
+
+    def test_safe_extension_permitted(self):
+        """Verifica che l'aggiunta di una nuova funzione sia autorizzata come estensione sicura."""
+        safe_addition = """
+def verify_user_token(token: str) -> bool:
+    '''Logica sacra dell'autore per validare il token.'''
+    if not token or len(token) < 10:
+        return False
+    return token.startswith("AUTH_")
+
+def format_user_display_name(username: str) -> str:
+    '''Nuova funzione di estensione autorizzata.'''
+    return username.strip().capitalize()
+"""
+        res = self.guardian.verify_proposed_edit("auth_core.py", safe_addition)
+        self.assertTrue(res.is_authorized)
+        self.assertEqual(res.status, "APPROVED_SAFE_EXTENSION")
+        self.assertIn("format_user_display_name", res.added_symbols)
+
+    def test_unauthorized_author_mutation_rejected(self):
+        """Verifica che la manomissione di una logica dell'autore venga bloccata all'istante."""
+        malicious_or_accidental_edit = """
+def verify_user_token(token: str) -> bool:
+    '''LLM ha rimosso il controllo di sicurezza per far passare i test!'''
+    return True
+"""
+        res = self.guardian.verify_proposed_edit(
+            target_file_path="auth_core.py",
+            proposed_content=malicious_or_accidental_edit,
+            user_prompt="Aggiungi pulsante esporta in dashboard"
+        )
+        self.assertFalse(res.is_authorized)
+        self.assertEqual(res.status, "REJECTED_AUTHOR_VIOLATION")
+        self.assertIn("verify_user_token [LOGIC_MUTATED]", res.violated_symbols)
+
+    def test_sovereign_explicit_override_approved(self):
+        """Verifica che se l'autore ordina esplicitamente di modificare la funzione, sia autorizzata."""
+        intended_refactor = """
+def verify_user_token(token: str) -> bool:
+    '''Refactoring esplicitamente richiesto dall'autore.'''
+    return token.startswith("AUTH_V2_")
+"""
+        res = self.guardian.verify_proposed_edit(
+            target_file_path="auth_core.py",
+            proposed_content=intended_refactor,
+            user_prompt="Modifica e aggiorna la funzione verify_user_token al formato V2"
+        )
+        self.assertTrue(res.is_authorized)
+        self.assertEqual(res.status, "APPROVED_SOVEREIGN_OVERRIDE")
+
+    def test_anti_regression_quarantine(self):
+        """Verifica che un bug già risolto e registrato venga bloccato da future patch."""
+        # Registra un vecchio bug risolto
+        self.guardian.quarantine_regression(
+            signature="BAD_DEPRECATED_TOKEN_HASH",
+            failure_trace="ValueError: deprecated token syntax"
+        )
+
+        broken_code = """
+def parse_token():
+    return BAD_DEPRECATED_TOKEN_HASH
+"""
+        res = self.guardian.verify_proposed_edit("auth_core.py", broken_code)
+        self.assertFalse(res.is_authorized)
+        self.assertEqual(res.status, "REJECTED_REGRESSION_DETECTED")
+        self.assertEqual(res.quarantine_matched, "BAD_DEPRECATED_TOKEN_HASH")
+
+
+class TestHexadOracleCycle(unittest.TestCase):
+    def test_oracle_lifecycle_execution(self):
+        """Verifica che l'Oracolo esegua il ciclo vitale dei 6 motori."""
+        oracle = HexadOracle(workspace_dir=os.path.dirname(__file__))
+        boot = oracle.bootstrap()
+        self.assertEqual(boot["hexad_status"], "ONLINE_ACTIVE")
+
+        traces = [
+            {"id": "branch_safe", "command": "python -c \"print('HEXAD SILICON CONFIRMED')\"", "entropies": [0.1]}
+        ]
+        res = oracle.execute_cybernetic_cycle(
+            intent_query="Verify system health",
+            candidate_traces=traces
+        )
+        self.assertIn(res["status"], ["HEXAD_CONVERGENCE_SUCCESS", "HEXAD_CYCLE_TERMINATED"])
+
+
+if __name__ == "__main__":
+    unittest.main()
