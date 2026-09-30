@@ -255,6 +255,16 @@ class TestHexadOracleCycle(unittest.TestCase):
         self.assertEqual(sum("[6. PEIRA] Responso" in line for line in res["audit_trail"]), 2)
         self.assertEqual(res["last_fracture"]["fracture_kind"], "TRANSIENT")
 
+    def test_author_override_lets_blocked_command_run(self):
+        """Con l'override esplicito dell'autore un comando bloccato viene eseguito, e resta nell'audit."""
+        oracle = self._isolated_oracle()
+        # Innocuo (è solo un echo), ma il gate lo classifica come distruzione di database
+        traces = [{"id": "drop_echo", "command": "echo DROP TABLE users", "entropies": [0.1]}]
+        res = oracle.execute_cybernetic_cycle("Author-approved step", candidate_traces=traces,
+                                              authorized_overrides=["database_destruction"])
+        self.assertEqual(res["status"], "HEXAD_CONVERGENCE_SUCCESS")
+        self.assertTrue(any("override dell'autore: database_destruction" in l for l in res["audit_trail"]))
+
     def test_no_candidates_is_not_a_success(self):
         """Verifica che senza rami candidati non venga eseguito alcun segnaposto né dichiarato successo."""
         oracle = self._isolated_oracle()

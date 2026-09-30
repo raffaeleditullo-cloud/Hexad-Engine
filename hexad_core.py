@@ -143,7 +143,8 @@ class HexadOracle:
         self,
         intent_query: str,
         candidate_traces: Optional[List[Dict[str, Any]]] = None,
-        max_retries: int = 2
+        max_retries: int = 2,
+        authorized_overrides: Optional[List[Any]] = None
     ) -> Dict[str, Any]:
         """
         Esegue il ciclo vitale a 6 fasi:
@@ -152,6 +153,10 @@ class HexadOracle:
         Un ramo bloccato dal gate DEMON o fratturato da PEIRA viene escluso dai cicli
         successivi (azione lagrangiana infinita). Se non restano rami alternativi il ciclo
         si arresta e restituisce la frattura al chiamante, senza rieseguire lo stesso comando.
+
+        authorized_overrides: regole del gate DEMON sospese esplicitamente dall'autore umano
+        (id di regola, o {"rule": id, "command": comando_esatto}); le regole catastrofiche
+        restano bloccate. Non va mai popolato con valori scelti dall'agente.
         """
         start_time = time.perf_counter()
         audit_log = []
@@ -244,7 +249,8 @@ class HexadOracle:
             if not HAS_DEMON_GATE:
                 audit_log.append("[5. DEMON] Gate di attuazione non disponibile: esecuzione negata (fail-closed).")
                 return {"status": "BLOCKED_BY_DEMON", "reason": "DEMON_GATE_UNAVAILABLE", "audit_trail": audit_log}
-            verdict = demon_action_verdict(chosen_command, workspace_dir=self.workspace_dir)
+            verdict = demon_action_verdict(chosen_command, workspace_dir=self.workspace_dir,
+                                           authorized_overrides=authorized_overrides)
             if not verdict.allowed:
                 audit_log.append(
                     f"[5. DEMON] Gate BLOCK su '{chosen_command}': {'; '.join(verdict.reasons)} "
@@ -255,7 +261,10 @@ class HexadOracle:
                 continue
             # Il gateway vocale (route_command) non è invocato qui: invierebbe il comando alla
             # ricerca web o eseguirebbe le proprie ipotesi predefinite, senza influire sul verdetto
-            audit_log.append(f"[5. DEMON] Gate ALLOW ({verdict.latency_ms:.3f} ms)")
+            if verdict.overridden_rules:
+                audit_log.append(f"[5. DEMON] Gate ALLOW con override dell'autore: {', '.join(verdict.overridden_rules)}")
+            else:
+                audit_log.append(f"[5. DEMON] Gate ALLOW ({verdict.latency_ms:.3f} ms)")
 
             # 6. PEIRA: Physical Silicon Impact
             if self.peira:

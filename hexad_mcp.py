@@ -20,6 +20,13 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from hexad_core import HexadOracle
 
+# Override del gate DEMON configurati dall'autore nell'ambiente del server MCP
+try:
+    from demon_action_gate import overrides_from_env
+except ImportError:
+    def overrides_from_env():
+        return []
+
 def create_mcp_response(msg_id, result=None, error=None):
     resp = {"jsonrpc": "2.0", "id": msg_id}
     if error:
@@ -220,7 +227,8 @@ def main():
                 elif tool_name == "hexad_execute_cycle":
                     q = args.get("intent_query", "")
                     traces = args.get("candidate_traces")
-                    res = oracle.execute_cybernetic_cycle(q, candidate_traces=traces)
+                    res = oracle.execute_cybernetic_cycle(q, candidate_traces=traces,
+                                                         authorized_overrides=overrides_from_env())
 
                     sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
                         "content": [{"type": "text", "text": json.dumps(res, indent=2)}]
