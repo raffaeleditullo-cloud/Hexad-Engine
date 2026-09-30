@@ -58,7 +58,7 @@ except ImportError:
     HAS_DEMON = False
 
 try:
-    from peira_engine import PeiraEngine
+    from peira_engine import PeiraEngine, classify_fracture
     HAS_PEIRA = True
 except ImportError:
     HAS_PEIRA = False
@@ -159,6 +159,8 @@ class HexadOracle:
         retries = 0
         excluded_branches: List[str] = []
         last_fracture: Optional[Dict[str, Any]] = None
+        # Un solo nuovo tentativo per ramo quando la frattura è transitoria (rete, timeout)
+        transient_retries: Dict[str, int] = {}
 
         # Senza rami candidati non c'è nulla da verificare: nessun comando segnaposto
         # viene eseguito, così un "successo" significa sempre un'azione reale riuscita
@@ -286,9 +288,16 @@ class HexadOracle:
                     "stderr": impact.stderr[-400:]
                 }
 
-                # Reality Reset: il ramo fallito riceve azione infinita ed esce dalla sovrapposizione
-                excluded_branches.append(chosen_branch_id)
-                audit_log.append(f"[3. ANIMA] Ramo '{chosen_branch_id}' escluso (azione lagrangiana infinita).")
+                fracture_kind = classify_fracture(impact)
+                last_fracture["fracture_kind"] = fracture_kind
+                if fracture_kind == "TRANSIENT" and transient_retries.get(chosen_branch_id, 0) < 1:
+                    # Ambiente instabile, non logica sbagliata: il ramo resta in gioco per un altro tentativo
+                    transient_retries[chosen_branch_id] = 1
+                    audit_log.append(f"[6. PEIRA] Frattura transitoria: il ramo '{chosen_branch_id}' verrà ritentato una volta.")
+                else:
+                    # Reality Reset: il ramo fallito riceve azione infinita ed esce dalla sovrapposizione
+                    excluded_branches.append(chosen_branch_id)
+                    audit_log.append(f"[3. ANIMA] Ramo '{chosen_branch_id}' escluso (azione lagrangiana infinita).")
 
             retries += 1
 

@@ -13,6 +13,18 @@ from hexad_guardian import HexadGuardian
 from hexad_core import HexadOracle
 
 
+# Fallisce con un errore di rete la prima volta, riesce la seconda (usa un file marcatore)
+FLAKY_SCRIPT = "\n".join([
+    "import os, sys",
+    "if not os.path.exists('marker'):",
+    "    open('marker', 'w').close()",
+    "    sys.stderr.write('ConnectionResetError: peer reset')",
+    "    sys.exit(1)",
+    "print('FLAKY OK')",
+]) + "\n"
+ALWAYS_DOWN = "python -c \"import sys; sys.stderr.write('ConnectionResetError: peer reset'); sys.exit(1)\""
+
+
 class TestHexadGuardian(unittest.TestCase):
     def setUp(self):
         self.test_dir = tempfile.mkdtemp()
@@ -222,6 +234,26 @@ class TestHexadOracleCycle(unittest.TestCase):
         self.assertEqual(res["status"], "HEXAD_HALTED_NO_ALTERNATIVES")
         self.assertTrue(any("Gate BLOCK" in line for line in res["audit_trail"]))
         self.assertFalse(any("[6. PEIRA]" in line for line in res["audit_trail"]))
+
+    def test_transient_fracture_retries_same_branch_once(self):
+        """Un ramo che fallisce per un errore di rete viene ritentato e converge al secondo passo."""
+        oracle = self._isolated_oracle()
+        with open(os.path.join(oracle.workspace_dir, "flaky.py"), "w", encoding="utf-8") as f:
+            f.write(FLAKY_SCRIPT)
+        traces = [{"id": "flaky_branch", "command": "python flaky.py", "entropies": [0.1]}]
+        res = oracle.execute_cybernetic_cycle("Flaky network step", candidate_traces=traces)
+        self.assertEqual(res["status"], "HEXAD_CONVERGENCE_SUCCESS")
+        self.assertEqual(res["cycles_used"], 2)
+        self.assertIn("FLAKY OK", res["output"])
+
+    def test_persistent_transient_failure_is_retried_only_once(self):
+        """Un errore transitorio che si ripete non genera tentativi infiniti: un solo retry, poi esclusione."""
+        oracle = self._isolated_oracle()
+        traces = [{"id": "down", "command": ALWAYS_DOWN, "entropies": [0.1]}]
+        res = oracle.execute_cybernetic_cycle("Service down", candidate_traces=traces, max_retries=5)
+        self.assertEqual(res["status"], "HEXAD_HALTED_NO_ALTERNATIVES")
+        self.assertEqual(sum("[6. PEIRA] Responso" in line for line in res["audit_trail"]), 2)
+        self.assertEqual(res["last_fracture"]["fracture_kind"], "TRANSIENT")
 
     def test_no_candidates_is_not_a_success(self):
         """Verifica che senza rami candidati non venga eseguito alcun segnaposto né dichiarato successo."""
