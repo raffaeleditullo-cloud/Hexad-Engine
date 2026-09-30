@@ -214,6 +214,9 @@ class HexadGuardian:
                 h = self._compute_ast_structural_hash(node)
                 proposed_symbols[node.name] = h
                 proposed_values[node.name] = self._compute_ast_constant_hash(node)
+        for name, node in self._module_constant_nodes(proposed_tree).items():
+            proposed_symbols[name] = self._compute_ast_structural_hash(node)
+            proposed_values[name] = self._compute_ast_constant_hash(node)
 
         # 3. Analisi delle alterazioni rispetto agli invarianti dell'autore
         protected_syms = self.invariants[rel_p]
@@ -346,9 +349,47 @@ class HexadGuardian:
                         criticality="SOVEREIGN_CORE",
                         constant_value_hash=self._compute_ast_constant_hash(node)
                     )
+
+            # Costanti di modulo (soglie, limiti, configurazione): stesse regole dei simboli
+            for name, node in self._module_constant_nodes(tree).items():
+                invariants[name] = AuthorInvariant(
+                    symbol_name=name,
+                    file_path=rel_path,
+                    kind="module_constant",
+                    line_start=node.lineno,
+                    line_end=getattr(node, "end_lineno", node.lineno),
+                    arg_signature=[],
+                    ast_structural_hash=self._compute_ast_structural_hash(node),
+                    criticality="SOVEREIGN_CORE",
+                    constant_value_hash=self._compute_ast_constant_hash(node)
+                )
         except Exception:
             pass
         return invariants
+
+    @staticmethod
+    def _module_constant_nodes(tree: ast.AST) -> Dict[str, ast.AST]:
+        """
+        Costanti di modulo per convenzione PEP 8: assegnamenti semplici a un nome in
+        MAIUSCOLO (MAX_RETRY = 3, _TIMEOUT: float = 2.0). Le variabili di lavoro degli
+        script (img, arr, threshold...) e i dunder come __all__ restano libere.
+        """
+        nodes: Dict[str, ast.AST] = {}
+        for node in getattr(tree, "body", []):
+            if isinstance(node, ast.Assign):
+                names = [t.id for t in node.targets if isinstance(t, ast.Name)]
+                if len(names) != len(node.targets):
+                    continue  # Destrutturazioni e attributi: fuori dal perimetro
+            elif isinstance(node, ast.AnnAssign) and node.value is not None and isinstance(node.target, ast.Name):
+                names = [node.target.id]
+            else:
+                continue
+            for name in names:
+                bare = name.lstrip("_")
+                is_dunder = name.startswith("__") and name.endswith("__")
+                if not is_dunder and bare and bare == bare.upper() and any(c.isalpha() for c in bare):
+                    nodes[name] = node
+        return nodes
 
     def _compute_ast_structural_hash(self, node: ast.AST) -> str:
         """Calcola un hash canonico della struttura dei nodi AST (indipendente da spaziature)."""

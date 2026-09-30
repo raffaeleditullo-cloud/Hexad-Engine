@@ -163,6 +163,52 @@ def verify_user_token(token: str) -> bool:
         res = self.guardian.verify_proposed_edit("modulo_nuovo.py", "def feature():\n    return 1\n")
         self.assertEqual(res.status, "APPROVED_SAFE_EXTENSION")
 
+    def _bootstrap_config_module(self):
+        source = (
+            "__version__ = '1.0'\n"
+            "MAX_DISCOUNT_PCT = 50\n"
+            "RETRY_LIMIT: int = 3\n"
+            "LOW, HIGH = 1, 9\n"
+            "working_buffer = []\n"
+            "_PRIVATE_LIMIT = 7\n"
+            "\n"
+            "def cap(pct):\n"
+            "    return min(pct, MAX_DISCOUNT_PCT)\n"
+        )
+        with open(os.path.join(self.test_dir, "config.py"), "w", encoding="utf-8") as f:
+            f.write(source)
+        self.guardian.bootstrap_project()
+        return source
+
+    def test_module_constants_are_indexed(self):
+        """Le costanti MAIUSCOLE entrano nella baseline; dunder, destrutturazioni e variabili no."""
+        self._bootstrap_config_module()
+        protected = self.guardian.invariants["config.py"]
+        self.assertEqual(protected["MAX_DISCOUNT_PCT"].kind, "module_constant")
+        self.assertIn("RETRY_LIMIT", protected)
+        self.assertIn("_PRIVATE_LIMIT", protected)
+        self.assertNotIn("__version__", protected)
+        self.assertNotIn("LOW", protected)
+        self.assertNotIn("working_buffer", protected)
+
+    def test_module_constant_value_change_needs_review(self):
+        """Alzare una soglia di modulo è autorizzato ma segnalato per revisione."""
+        source = self._bootstrap_config_module()
+        res = self.guardian.verify_proposed_edit("config.py", source.replace("MAX_DISCOUNT_PCT = 50", "MAX_DISCOUNT_PCT = 90"))
+        self.assertTrue(res.is_authorized)
+        self.assertEqual(res.status, "APPROVED_CONSTANT_DRIFT_REVIEW")
+        self.assertIn("MAX_DISCOUNT_PCT [CONSTANT_DRIFT]", res.drifted_symbols)
+
+    def test_module_constant_removed_or_rewritten_is_violation(self):
+        """Eliminare una costante o sostituirla con un'espressione è una violazione strutturale."""
+        source = self._bootstrap_config_module()
+        res = self.guardian.verify_proposed_edit("config.py", source.replace("RETRY_LIMIT: int = 3\n", ""))
+        self.assertEqual(res.status, "REJECTED_AUTHOR_VIOLATION")
+        self.assertIn("RETRY_LIMIT [DELETED]", res.violated_symbols)
+        res = self.guardian.verify_proposed_edit(
+            "config.py", source.replace("MAX_DISCOUNT_PCT = 50", "MAX_DISCOUNT_PCT = int(__import__('os').environ.get('D', 100))"))
+        self.assertEqual(res.status, "REJECTED_AUTHOR_VIOLATION")
+
     def test_legacy_baseline_without_value_hash(self):
         """Verifica che le baseline precedenti (senza hash dei valori) restino solo strutturali."""
         for inv in self.guardian.invariants["auth_core.py"].values():
