@@ -451,7 +451,13 @@ class HexadGuardian:
         file_base = os.path.basename(rel_file).lower()
 
         # Parole chiave di intenzione di modifica
-        change_verbs = ["modifica", "cambia", "aggiorna", "refactor", "riscrivi", "delete", "remove", "update", "rewrite", "fix", "correggi"]
+        change_verbs = [
+            # Italiano
+            "modifica", "cambia", "aggiorna", "riscrivi", "correggi", "elimina", "rinomina",
+            # Inglese
+            "refactor", "delete", "remove", "update", "rewrite", "fix", "rename",
+            "replace", "eliminate", "drop", "destroy", "rework", "overwrite", "edit",
+        ]
         has_change_verb = any(v in p_lower for v in change_verbs)
 
         if has_change_verb:
