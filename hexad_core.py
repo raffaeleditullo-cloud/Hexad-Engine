@@ -34,6 +34,12 @@ except ImportError:
     HAS_OCULUS = False
 
 try:
+    from coris_polypus import PolypusEngine
+    HAS_POLYPUS = True
+except ImportError:
+    HAS_POLYPUS = False
+
+try:
     from coris_engine import CorisEngine
     HAS_CORIS = True
 except ImportError:
@@ -81,9 +87,14 @@ class HexadOracle:
         self.workspace_dir = os.path.abspath(workspace_dir)
         self.guardian = HexadGuardian(self.workspace_dir)
 
-        # Inizializzazione dei 6 motori
+        # Inizializzazione dei 6 motori (con failover automatico a POLYPUS a 3 cuori se disponibile)
         self.oculus = OculusEngine() if HAS_OCULUS else None
-        self.coris = CorisEngine() if HAS_CORIS else None
+        if HAS_POLYPUS:
+            self.coris = PolypusEngine()
+        elif HAS_CORIS:
+            self.coris = CorisEngine()
+        else:
+            self.coris = None
         self.anima = AnimaEngine() if HAS_ANIMA else None
         self.mneme = MnemeEngine(state_dim=5, alpha=0.15) if HAS_MNEME else None
         self.demon = DemonGateway() if HAS_DEMON else None
@@ -107,12 +118,13 @@ class HexadOracle:
             "oculus_topology": topology_info,
             "engines_online": {
                 "1_OCULUS": HAS_OCULUS,
-                "2_CORIS": HAS_CORIS,
+                "2_CORIS": (HAS_POLYPUS or HAS_CORIS),
                 "3_ANIMA": HAS_ANIMA,
                 "4_MNEME": HAS_MNEME,
                 "5_DEMON": HAS_DEMON,
                 "6_PEIRA": HAS_PEIRA
-            }
+            },
+            "coris_architecture": "POLYPUS_TRI_VENTRICULAR" if HAS_POLYPUS else ("STANDARD" if HAS_CORIS else "OFFLINE")
         }
 
     # =========================================================================
