@@ -20,6 +20,7 @@ import sys
 import os
 import json
 import time
+from dataclasses import asdict, is_dataclass
 from typing import Dict, Any, List
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -439,10 +440,14 @@ def main():
 
                 # --- 2. CORIS DISPATCH ---
                 elif tool_name == "coris_vital_pulse":
-                    tc = args.get("token_count", 1500)
-                    pulse_res = oracle.coris.pulse(tc) if hasattr(oracle.coris, "pulse") else {"status": "NOMINAL", "tokens": tc}
+                    tc = int(args.get("token_count", 1500))
+                    if oracle.coris:
+                        pulse_res = oracle.coris.pulse(error_rate=0.0, latency_ms=10.0, context_tokens_used=tc)
+                        payload = asdict(pulse_res) if is_dataclass(pulse_res) else str(pulse_res)
+                    else:
+                        payload = {"status": "NOMINAL", "tokens": tc}
                     sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
-                        "content": [{"type": "text", "text": json.dumps(pulse_res, indent=2, default=str)}]
+                        "content": [{"type": "text", "text": json.dumps(payload, indent=2, default=str)}]
                     })) + "\n")
                     sys.stdout.flush()
 
@@ -466,11 +471,17 @@ def main():
                     sys.stdout.flush()
 
                 elif tool_name == "daedalus_evaluate_trajectory_safety":
-                    cur = tuple(args.get("current_pos", [0, 0]))
-                    mov = tuple(args.get("proposed_move", [0, 1]))
-                    res = oracle.daedalus.evaluate_move_safety(cur, mov) if oracle.daedalus else {"safe": True, "score": 1.0}
+                    head = tuple(args.get("current_pos", [0, 0]))
+                    target = tuple(args.get("proposed_move", [head[0] + 1, head[1]]))
+                    body_raw = args.get("body", [head])
+                    body = [tuple(p) for p in body_raw]
+                    if oracle.daedalus:
+                        cert = oracle.daedalus.evaluate_move_safety(head=head, food=target, body=body)
+                        res = asdict(cert) if is_dataclass(cert) else str(cert)
+                    else:
+                        res = {"safe": True, "score": 1.0}
                     sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
-                        "content": [{"type": "text", "text": json.dumps(res, indent=2)}]
+                        "content": [{"type": "text", "text": json.dumps(res, indent=2, default=str)}]
                     })) + "\n")
                     sys.stdout.flush()
 
@@ -489,11 +500,15 @@ def main():
 
                 # --- 4. MNEME DISPATCH ---
                 elif tool_name == "mneme_certify_stability":
-                    sv = args.get("state_vector", [1, 0, 0, 0, 0])
-                    dv = args.get("delta_vector", [-0.1, 0, 0, 0, 0])
-                    cert = oracle.mneme.certify_trajectory_stability(sv, dv) if oracle.mneme else {"stable": True, "dV_dt": -0.1}
+                    sv = args.get("state_vector", [1.0, 0.0, 0.0, 0.0, 0.0])
+                    dv = args.get("delta_vector", [-0.1, 0.0, 0.0, 0.0, 0.0])
+                    if oracle.mneme:
+                        cert = oracle.mneme.certify_trajectory_stability(current_state=sv, velocity_vector=dv)
+                        res = asdict(cert) if is_dataclass(cert) else str(cert)
+                    else:
+                        res = {"stable": True, "dV_dt": -0.1}
                     sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
-                        "content": [{"type": "text", "text": json.dumps(cert, indent=2)}]
+                        "content": [{"type": "text", "text": json.dumps(res, indent=2, default=str)}]
                     })) + "\n")
                     sys.stdout.flush()
 
@@ -532,9 +547,10 @@ def main():
                 # --- 5. DEMON DISPATCH ---
                 elif tool_name == "demon_action_gate":
                     cmd = args.get("command", "")
-                    verdict = demon_action_verdict(cmd)
+                    verdict = demon_action_verdict(cmd, workspace_dir=oracle.workspace_dir)
+                    res = asdict(verdict) if is_dataclass(verdict) else str(verdict)
                     sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
-                        "content": [{"type": "text", "text": json.dumps(verdict, indent=2)}]
+                        "content": [{"type": "text", "text": json.dumps(res, indent=2, default=str)}]
                     })) + "\n")
                     sys.stdout.flush()
 
@@ -556,30 +572,53 @@ def main():
                 # --- 6. PEIRA DISPATCH ---
                 elif tool_name == "peira_execute_sandboxed_trial":
                     cmd = args.get("command", "echo 'PEIRA TEST'")
-                    tout = args.get("timeout_sec", 5.0)
-                    impact = oracle.peira.execute_physical_trial(cmd, timeout=tout) if oracle.peira else None
-                    res = {
-                        "exit_code": impact.exit_code if impact else 0,
-                        "stdout": impact.stdout if impact else "OK",
-                        "stderr": impact.stderr if impact else "",
-                        "latency_ms": round(impact.latency_ms, 2) if impact else 1.0
-                    }
+                    impact = oracle.peira.execute_physical_trial(cmd, cwd=oracle.workspace_dir) if oracle.peira else None
+                    if impact:
+                        res = asdict(impact) if is_dataclass(impact) else {
+                            "exit_code": impact.exit_code,
+                            "stdout": impact.stdout,
+                            "stderr": impact.stderr,
+                            "latency_ms": round(impact.latency_ms, 2)
+                        }
+                    else:
+                        res = {"exit_code": 0, "stdout": "PEIRA OFFLINE", "latency_ms": 1.0}
                     sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
-                        "content": [{"type": "text", "text": json.dumps(res, indent=2)}]
+                        "content": [{"type": "text", "text": json.dumps(res, indent=2, default=str)}]
                     })) + "\n")
                     sys.stdout.flush()
 
                 # --- 🌙 LUNAR DISPATCH ---
                 elif tool_name == "lunar_execute_failover":
-                    ev = args.get("critical_event", "SHOCK")
-                    res = oracle.lunar.execute_harmonic_failover(ev) if oracle.lunar else {"failover_success": True, "latency_ms": 0.8}
+                    v = args.get("membrane_potentials", [28.5] * 64)
+                    w = args.get("synaptic_weights", [[1.2] * 4 for _ in range(64)])
+                    lyap = float(args.get("divergent_lyapunov", 3.5))
+                    ev = args.get("critical_event", "cataclysm")
+                    if oracle.lunar:
+                        v_out, w_out, cert = oracle.lunar.execute_harmonic_failover(
+                            membrane_potentials=v,
+                            synaptic_weights=w,
+                            divergent_lyapunov=lyap,
+                            shock_type=ev
+                        )
+                        res = {
+                            "failover_success": cert.is_phase_locked,
+                            "order_parameter_r": cert.order_parameter_r,
+                            "quench_latency_ms": cert.quench_latency_ms,
+                            "lyapunov_quenched": cert.lyapunov_quenched,
+                            "certificate": asdict(cert)
+                        }
+                    else:
+                        res = {"failover_success": True, "latency_ms": 0.8}
                     sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
                         "content": [{"type": "text", "text": json.dumps(res, indent=2, default=str)}]
                     })) + "\n")
                     sys.stdout.flush()
 
                 elif tool_name == "lunar_get_telemetry":
-                    res = oracle.lunar.state if oracle.lunar else {"phase_order": 0.99, "status": "SYNCHRONIZED"}
+                    if oracle.lunar:
+                        res = asdict(oracle.lunar.state)
+                    else:
+                        res = {"phase_order": 0.99, "status": "SYNCHRONIZED"}
                     sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
                         "content": [{"type": "text", "text": json.dumps(res, indent=2, default=str)}]
                     })) + "\n")

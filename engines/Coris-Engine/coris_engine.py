@@ -70,7 +70,9 @@ class CorisEngine:
                 with open(self.immune_store_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     for k, v in data.items():
-                        self.antibodies[k] = Antibody(**v)
+                        ab = Antibody(**v)
+                        if ab.pattern_signature and ab.pattern_signature.strip():
+                            self.antibodies[k] = ab
             except Exception as e:
                 print(f"[CORIS IMMUNE] Errore caricamento anticorpi: {e}")
 
@@ -184,17 +186,21 @@ class CorisEngine:
         pattern_signature: str,
         source_layer: str,
         neutralization_rule: str
-    ) -> Antibody:
+    ) -> Optional[Antibody]:
         """
         Sintetizza un anticorpo linfatico permanente dall'epitopo dell'errore
         (intercetta pattern allucinati da ANIMA o attacchi bloccati da DEMON).
         """
-        raw_epitope = f"{source_layer}::{pattern_signature.strip()}"
+        sig = pattern_signature.strip()
+        if not sig:
+            return None
+
+        raw_epitope = f"{source_layer}::{sig}"
         epitope_hash = hashlib.sha256(raw_epitope.encode("utf-8")).hexdigest()[:16]
 
         ab = Antibody(
             epitope_hash=epitope_hash,
-            pattern_signature=pattern_signature,
+            pattern_signature=sig,
             source_layer=source_layer,
             neutralization_rule=neutralization_rule
         )
@@ -207,8 +213,12 @@ class CorisEngine:
         Scansione immunitaria: verifica se un testo/comando si lega a un anticorpo noto.
         Neutralizzazione istantanea a monte (0 token sprecati).
         """
+        if not candidate_text:
+            return None
+        text_lower = candidate_text.lower()
         for ab in self.antibodies.values():
-            if ab.pattern_signature.lower() in candidate_text.lower():
+            sig = ab.pattern_signature.strip().lower()
+            if sig and sig in text_lower:
                 return ab
         return None
 

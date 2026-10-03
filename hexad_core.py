@@ -29,7 +29,7 @@ engine_names = [
     "Mneme-Engine", "Demon-Engine", "Peira-Engine",
     "Lunar-Engine", "Daedalus-Engine"
 ]
-for base in search_bases:
+for base in reversed(search_bases):
     for eng in engine_names:
         ep = os.path.join(base, eng)
         if os.path.exists(ep) and ep not in sys.path:
