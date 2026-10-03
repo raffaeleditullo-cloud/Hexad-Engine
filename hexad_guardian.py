@@ -60,6 +60,8 @@ class HexadGuardian:
         self.antibodies_file = os.path.join(self.hexad_dir, "antibodies.json")
         self.invariants: Dict[str, Dict[str, AuthorInvariant]] = {} # file -> symbol -> AuthorInvariant
         self.antibodies: List[Dict[str, Any]] = []
+        self.integrity_status: str = "READY"
+        self.integrity_error: Optional[str] = None
 
         self._ensure_storage()
         self._load_state()
@@ -77,16 +79,22 @@ class HexadGuardian:
                         self.invariants[file_rel] = {}
                         for sym_name, s_data in syms.items():
                             self.invariants[file_rel][sym_name] = AuthorInvariant(**s_data)
-            except Exception:
-                pass
+            except Exception as e:
+                # FAIL-CLOSED: Non silenziare la corruzione della baseline
+                self.integrity_status = "INTEGRITY_FAILURE"
+                self.integrity_error = f"Corruzione invariants.json: {str(e)}"
+                return
 
         # Carica anticorpi anti-regressione
         if os.path.exists(self.antibodies_file):
             try:
                 with open(self.antibodies_file, "r", encoding="utf-8") as f:
                     self.antibodies = json.load(f)
-            except Exception:
-                pass
+            except Exception as e:
+                # FAIL-CLOSED: Non silenziare la corruzione degli anticorpi
+                self.integrity_status = "INTEGRITY_FAILURE"
+                self.integrity_error = f"Corruzione antibodies.json: {str(e)}"
+                return
 
     def _save_state(self):
         # Salva invarianti
@@ -108,6 +116,19 @@ class HexadGuardian:
         Scansiona l'intero repository, estrae l'AST di ogni file Python e blocca
         le funzioni dell'autore come nodi sacri invarianti.
         """
+        if self.integrity_status == "INTEGRITY_FAILURE" and not force_refresh:
+            return {
+                "status": "INTEGRITY_FAILURE",
+                "error": self.integrity_error,
+                "workspace": self.workspace_dir,
+                "action_required": "Eseguire bootstrap con force_refresh=True per sanare e ricostruire la baseline."
+            }
+
+        if force_refresh:
+            self.integrity_status = "READY"
+            self.integrity_error = None
+            self.invariants = {}
+
         indexed_files = 0
         indexed_symbols = 0
 
@@ -157,6 +178,15 @@ class HexadGuardian:
         - struttura intatta, costanti cambiate -> APPROVED_CONSTANT_DRIFT_REVIEW (autorizzato, da revisionare)
         - nessun cambiamento sui simboli sacri -> APPROVED_SAFE_EXTENSION
         """
+        # 0. Sovereign Fail-Closed: se la baseline è corrotta, blocca qualsiasi mutazione
+        if self.integrity_status == "INTEGRITY_FAILURE":
+            return InvarianceVerificationResult(
+                is_authorized=False,
+                status="REJECTED_INTEGRITY_FAILURE",
+                target_file=target_file_path,
+                reason=f"SOVEREIGN FAIL-CLOSED: Il database degli invarianti o anticorpi è corrotto ({self.integrity_error}). Modifica bloccata per salvaguardia di sicurezza."
+            )
+
         # Normalizzazione canonica: "a/b.py", ".\a\b.py" e il percorso assoluto sono lo stesso file
         rel_p = self._resolve_workspace_path(target_file_path)
         if rel_p is None:
@@ -272,7 +302,49 @@ class HexadGuardian:
                 )
 
         if drifted_symbols:
-            # Soglia intermedia: la logica resta quella dell'autore, ma i valori vanno revisionati
+            # Categorizzazione Sovrana del Drift:
+            # SECURITY_CONSTANT / CONTROL_LIMIT / CRYPTO / AUTH -> BLOCK (salvo esplicito override)
+            # CONFIG_CONSTANT / GENERAL -> REVIEW / ALLOW
+            security_crypto_keywords = [
+                "SECRET", "PASSWD", "PASSWORD", "API_KEY", "PRIVATE_KEY", 
+                "AUTH_TOKEN", "ACCESS_TOKEN", "CIPHER", "SECURITY",
+                "RATE_LIMIT", "MAX_RETRIES", "LOGIN_ATTEMPTS", "SSL_CERT", "JWT",
+                "CONTROL_LIMIT"
+            ]
+            critical_drifted = []
+            for s in drifted_symbols:
+                clean_sym = s.replace(" [CONSTANT_DRIFT]", "").strip()
+                sym_obj = protected_syms.get(clean_sym)
+                is_mod_const = sym_obj and getattr(sym_obj, "kind", "") == "module_constant"
+                s_upper = clean_sym.upper()
+                if is_mod_const and any(kw in s_upper for kw in security_crypto_keywords):
+                    critical_drifted.append(s)
+
+            if critical_drifted:
+                user_has_authorized = explicit_override or self._check_explicit_intent(user_prompt, rel_p, critical_drifted)
+                if user_has_authorized:
+                    return InvarianceVerificationResult(
+                        is_authorized=True,
+                        status="APPROVED_SOVEREIGN_OVERRIDE",
+                        target_file=rel_p,
+                        drifted_symbols=drifted_symbols,
+                        reason="Modifica a costanti critiche autorizzata esplicitamente dal prompt dell'autore."
+                    )
+                else:
+                    return InvarianceVerificationResult(
+                        is_authorized=False,
+                        status="REJECTED_CRITICAL_CONSTANT_DRIFT",
+                        target_file=rel_p,
+                        violated_symbols=critical_drifted,
+                        drifted_symbols=drifted_symbols,
+                        reason=(
+                            f"BLOCCO SOVRANO COSTANTI CRITICHE: Rilevato drift su parametri di sicurezza/controllo: "
+                            f"{', '.join(critical_drifted)}. Azione bloccata per prevenire allentamento vincoli (FAIL-CLOSED). "
+                            f"Classificazione: SECURITY_CONSTANT / CONTROL_LIMIT -> BLOCK."
+                        )
+                    )
+
+            # Soglia intermedia per costanti ordinarie/configurative
             return InvarianceVerificationResult(
                 is_authorized=True,
                 status="APPROVED_CONSTANT_DRIFT_REVIEW",
@@ -280,8 +352,8 @@ class HexadGuardian:
                 added_symbols=added_symbols,
                 drifted_symbols=drifted_symbols,
                 reason=(
-                    f"Struttura delle logiche dell'autore intatta, ma valori costanti modificati in: {', '.join(drifted_symbols)}. "
-                    f"Modifica autorizzata, da sottoporre a revisione umana (soglie, default, letterali)."
+                    f"Struttura delle logiche dell'autore intatta, ma valori costanti ordinari modificati in: {', '.join(drifted_symbols)}. "
+                    f"Modifica autorizzata con revisione (CONFIG_CONSTANT -> REVIEW)."
                 )
             )
 

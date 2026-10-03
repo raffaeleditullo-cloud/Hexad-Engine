@@ -337,10 +337,11 @@ def main():
                 # --- HEXAD MASTER DISPATCH ---
                 if tool_name == "hexad_bootstrap_project":
                     ws = args.get("workspace_path")
+                    refresh = bool(args.get("force_refresh", False))
                     if ws and os.path.exists(ws):
                         oracle.workspace_dir = os.path.abspath(ws)
                         oracle.guardian = HexadGuardian(oracle.workspace_dir)
-                    boot_res = oracle.bootstrap()
+                    boot_res = oracle.bootstrap(force_refresh=refresh)
                     sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
                         "content": [{"type": "text", "text": json.dumps(boot_res, indent=2)}]
                     })) + "\n")

@@ -128,29 +128,49 @@ class HexadOracle:
     # =========================================================================
     # 1. INITIALIZATION & REPO DNA ONBOARDING
     # =========================================================================
-    def bootstrap(self) -> Dict[str, Any]:
+    def bootstrap(self, force_refresh: bool = False) -> Dict[str, Any]:
         """Esegue la scansione di primo avvio: indicizza il DNA del progetto e blocca gli invarianti."""
-        guard_res = self.guardian.bootstrap_project()
+        guard_res = self.guardian.bootstrap_project(force_refresh=force_refresh)
         
         # Scansione foveale con OCULUS se disponibile
         topology_info = {}
         if self.oculus:
-            topology_info = self.oculus.scan_directory_topology(self.workspace_dir)
+            try:
+                topology_info = self.oculus.scan_directory_topology(self.workspace_dir)
+            except Exception as e:
+                topology_info = {"error": str(e)}
+
+        engines_map = {
+            "1_OCULUS": HAS_OCULUS,
+            "2_CORIS": (HAS_POLYPUS or HAS_CORIS),
+            "3_ANIMA": HAS_ANIMA,
+            "4_MNEME": HAS_MNEME,
+            "5_DEMON": HAS_DEMON,
+            "6_PEIRA": HAS_PEIRA,
+            "LUNAR_SENTINEL": HAS_LUNAR,
+            "DAEDALUS_ARIADNE": HAS_DAEDALUS
+        }
+        
+        core_engines_count = sum(1 for k in ["1_OCULUS", "2_CORIS", "3_ANIMA", "4_MNEME", "5_DEMON", "6_PEIRA"] if engines_map.get(k))
+
+        # Calcolo status aggregato dinamico (Fail-Closed su integrità compromessa)
+        if getattr(self.guardian, "integrity_status", "READY") == "INTEGRITY_FAILURE":
+            aggregated_status = "FAILED_INTEGRITY_CORRUPTION"
+        elif core_engines_count == 6 and guard_res.get("status") == "BOOTSTRAP_COMPLETE":
+            aggregated_status = "ONLINE_ACTIVE"
+        elif 4 <= core_engines_count < 6:
+            aggregated_status = "DEGRADED"
+        elif core_engines_count > 0:
+            aggregated_status = "PARTIAL_ENGINES"
+        else:
+            aggregated_status = "GUARDIAN_ONLY"
 
         return {
-            "hexad_status": "ONLINE_ACTIVE",
+            "hexad_status": aggregated_status,
+            "core_engines_ratio": f"{core_engines_count}/6",
             "guardian_invariants": guard_res,
             "oculus_topology": topology_info,
-            "engines_online": {
-                "1_OCULUS": HAS_OCULUS,
-                "2_CORIS": (HAS_POLYPUS or HAS_CORIS),
-                "3_ANIMA": HAS_ANIMA,
-                "4_MNEME": HAS_MNEME,
-                "5_DEMON": HAS_DEMON,
-                "6_PEIRA": HAS_PEIRA,
-                "LUNAR_SENTINEL": HAS_LUNAR,
-                "DAEDALUS_ARIADNE": HAS_DAEDALUS
-            },
+            "engines_online": engines_map,
             "coris_architecture": "POLYPUS_TRI_VENTRICULAR" if HAS_POLYPUS else ("STANDARD" if HAS_CORIS else "OFFLINE")
         }
 
