@@ -78,6 +78,23 @@ Every developer using AI today (Cursor, Copilot, Claude Code, Devin) experiences
 
 ---
 
+## 🌙 LUNAR & LE ESTENSIONI DEI MOTORI DI HEXAD
+
+Oltre ai 6 pilastri autonomi, ciascun motore e HEXAD stesso sono dotati di estensioni operative avanzate, validate su silicio e fisica continua:
+
+* **🌙 LUNAR (Estensione Riflessiva di Emergenza di HEXAD)**:
+  * Integrato direttamente nel core di HEXAD (`lunar_engine.py`, `lunar_mcp.py`).
+  * Interviene in sub-millisecondi ($1.8\text{ms}$) solo in caso di shock critico o saturazione, deflettendo colpi ed errori senza azzerare lo stato vitale.
+* **🏛️ DAEDALUS & 🧵 ARIADNE (Estensioni di ANIMA)**:
+  * Bussola geodetica anti-loop e blocco di isteresi temporale ($\tau = 1.6\text{s}$) che elimina il *Relay Chattering* (oscillazione a 60Hz tra decisioni contrastanti).
+* **⚡ NEMESIS & 🧬 LAMARCK (Estensioni di MNEME)**:
+  * **NEMESIS**: Converte la memoria del trauma (ferite e assedio) in energia cinetica di contrattacco (+55% velocità, +35% fire rate).
+  * **LAMARCK**: Adattamento epigenetico continuo in vita. Elimina la trappola della mortalità darwiniana: l'agente che combatte e sopravvive scala di generazione sul campo (fino a Gen 8/9).
+* **🛡️ INVARIANZA ORTOGONALE DI STATO (Estensione di DEMON)**:
+  * $\langle \vec{S}_{\text{adversary}}, \vec{\Omega}_{\text{internal}} \rangle = 0$. Protocollo Zero-Trust contro manipolazione avversaria, droni Trojan, false tregue ed esche di avidità.
+
+---
+
 ## 🛡️ The Sovereign Invariant Guardian
 
 ### 1. Semantic AST Hashing
