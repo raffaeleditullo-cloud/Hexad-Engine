@@ -125,12 +125,41 @@ To attach **HEXAD** to your AI agent, add the following entry to your MCP config
 }
 ```
 
-### Exposed MCP Tools
-1. `hexad_bootstrap_project`: Scans and locks the author's architecture baseline.
-2. `hexad_verify_author_invariance`: Pre-flight verification for any code patch or edit.
-3. `hexad_execute_cycle`: Runs the complete 6-stage cybernetic loop.
-4. `hexad_quarantine_regression`: Registers a past bug to prevent regression.
-5. `hexad_status_telemetry`: Emits real-time telemetry across all 6 engines.
+### 📦 Standalone All-In-One Architecture (`./engines/`)
+A partire dalla v2.0, `Hexad-Engine` è completamente **autonomo e autosufficiente**: include l'intera suite dei 6 motori e le estensioni operative direttamente nella directory `engines/`. Non richiede repository esterni per funzionare: clonando `Hexad-Engine` si ottiene l'intero organismo cibernetico pronto all'uso con tutti i motori a `True`.
+
+### 🛠️ 21 Unified Master MCP Tools Esportati
+`hexad_mcp.py` esporta un'interfaccia unica e completa che racchiude tutte le funzionalità dell'ecosistema:
+
+1. **HEXAD Master**:
+   * `hexad_bootstrap_project`: Scansiona e blocca gli invarianti dell'autore.
+   * `hexad_verify_author_invariance`: Gate di pre-volo che blocca modifiche non autorizzate al codice sacro.
+   * `hexad_execute_cycle`: Esegue il ciclo completo a 6 stadi a ciclo chiuso.
+   * `hexad_quarantine_regression`: Registra anticorpi immunitari permanenti contro bug storici.
+   * `hexad_status_telemetry`: Telemetria in tempo reale con stato di tutti i 6 motori + estensioni.
+   * `hexad_export_portable_skill`: Esporta la skill sovrana universale per ChatGPT, Cursor o Claude.
+2. **1. OCULUS**:
+   * `oculus_foveal_scan`: Compressione foveale ad altissima risoluzione (risparmio 90% token).
+   * `oculus_project_ast_graph`: Mappa topologica AST delle dipendenze in <10ms.
+3. **2. CORIS**:
+   * `coris_vital_pulse`: Battito emodinamico ed energia libera variazionale a 3 cuori.
+   * `coris_synthesize_antibody`: Sintesi di anticorpi linfatici permanenti.
+4. **3. ANIMA & DAEDALUS**:
+   * `anima_collapse_stream`: Collasso di rami alternativi per minima azione Lagrangiana.
+   * `daedalus_evaluate_trajectory_safety`: Navigazione geodetica anti-loop.
+   * `daedalus_ariadne_lock`: Blocco di isteresi temporale $\tau = 1.6\text{s}$ anti-chattering.
+5. **4. MNEME**:
+   * `mneme_certify_stability`: Certificazione di stabilità asintotica di Lyapunov ($dV/dt < 0$).
+   * `mneme_nemesis_retribution`: Retribuzione cinetica da trauma (+55% velocità, contrattacco).
+   * `mneme_lamarck_evolution`: Epigenesi continua in vita senza morte (scaling fino a Gen 8/9).
+6. **5. DEMON**:
+   * `demon_action_gate`: Controllo deterministico pre-esecuzione sandbox MITRE ATT&CK T1485.
+   * `demon_orthogonal_invariance`: Invarianza Ortogonale $\langle S, \Omega \rangle = 0$ contro Trojan ed esche.
+7. **6. PEIRA**:
+   * `peira_execute_sandboxed_trial`: Verifica empirica su silicio e misura del $\Delta_\text{empirico}$.
+8. **🌙 LUNAR**:
+   * `lunar_execute_failover`: Riflesso involontario di failover istantaneo a $1.8\text{ms}$.
+   * `lunar_get_telemetry`: Telemetria e ordine di fase Kuramoto in tempo reale.
 
 ---
 

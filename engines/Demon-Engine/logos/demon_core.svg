@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="coreRed" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff2a55" />
+      <stop offset="50%" stop-color="#dc2626" />
+      <stop offset="100%" stop-color="#880018" />
+    </linearGradient>
+    <filter id="glow-core" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur1" />
+      <feGaussianBlur stdDeviation="14" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur2" />
+        <feMergeNode in="blur1" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <g transform="translate(0, 5)">
+    <!-- Outer Demon Horns & Psi Bowl -->
+    <path d="M 250 365 
+             C 185 365, 125 315, 108 240 
+             C 92 165, 78 95, 96 36 
+             C 104 68, 134 118, 170 146 
+             C 184 157, 188 180, 188 215 
+             C 188 265, 212 305, 250 305 
+             C 288 305, 312 265, 312 215 
+             C 312 180, 316 157, 330 146 
+             C 366 118, 396 68, 404 36 
+             C 422 95, 408 165, 392 240 
+             C 375 315, 315 365, 250 365 Z" 
+          fill="none" stroke="url(#coreRed)" stroke-width="12" stroke-linejoin="round" filter="url(#glow-core)" />
+    
+    <path d="M 250 365 
+             C 185 365, 125 315, 108 240 
+             C 92 165, 78 95, 96 36 
+             C 104 68, 134 118, 170 146 
+             C 184 157, 188 180, 188 215 
+             C 188 265, 212 305, 250 305 
+             C 288 305, 312 265, 312 215 
+             C 312 180, 316 157, 330 146 
+             C 366 118, 396 68, 404 36 
+             C 422 95, 408 165, 392 240 
+             C 375 315, 315 365, 250 365 Z" 
+          fill="none" stroke="#ff7799" stroke-width="3" stroke-linejoin="round" />
+
+    <!-- Center Column Pillar & Top Capital -->
+    <path d="M 215 140 L 285 140 L 285 162 L 268 162 L 268 335 L 232 335 L 232 162 L 215 162 Z" 
+          fill="none" stroke="url(#coreRed)" stroke-width="10" stroke-linejoin="round" filter="url(#glow-core)" />
+    <path d="M 215 140 L 285 140 L 285 162 L 268 162 L 268 335 L 232 335 L 232 162 L 215 162 Z" 
+          fill="none" stroke="#ff88aa" stroke-width="2.5" stroke-linejoin="round" />
+
+    <!-- Devil Tail Hook -->
+    <path d="M 234 362 L 234 420 C 234 460 262 468 276 448 C 282 438 284 424 270 424 C 258 424 252 435 252 450 C 252 480 238 494 228 494 C 214 494 212 458 212 420 L 212 362 Z" 
+          fill="url(#coreRed)" stroke="url(#coreRed)" stroke-width="4" filter="url(#glow-core)" />
+    <path d="M 234 362 L 234 420 C 234 460 262 468 276 448 C 282 438 284 424 270 424 C 258 424 252 435 252 450 C 252 480 238 494 228 494 C 214 494 212 458 212 420 L 212 362 Z" 
+          fill="#ff88aa" opacity="0.6" />
+  </g>
+</svg>

@@ -1,0 +1,72 @@
+{
+  "fde48e99ab0b1fbd": {
+    "query": "Node.js 22 LTS novita caratteristiche principali",
+    "timestamp": "2026-09-29 08:55:08",
+    "winner_id": "SRC_B",
+    "title": "Node.js 22 (LTS) - What's New, Support Lifecycle &",
+    "content": "Apr 24, 2024 · Discover what's new in Node.js 22. Complete release history, support lifecycle, release dates, LTS schedule and End of Life (EOL) status. Node.js is an... Jan 13, 2026 · Node.js® is a free, open-source, cross-platform JavaScript runtime environment that lets developers create servers, web apps, command line tools and scripts. May 8, 2026 · 文章浏览阅读309次，点赞8次，收藏6次。 Node.js 22 于 2024 年 4 月发布，并在 2024 年 10 月成为 LTS（长期支持）版本。 本文基于 Node.js 官方博客和发布说明，深入解析 22 版本的核心特性、性能优化与实战应用。 Mar 19, 2026 · Node.js 22 entered LTS (Long Term Support) in October 2024. It includes native test runner maturity, WebSocket client built-in, require (ESM) support, the V8 Maglev compiler, and performance improvements up to 30% for CPU-bound tasks. Dec 15, 2025 · Explicamos as principais novas funcionalidades do Node.js 22, que se tornou LTS em outubro de 2024. Suporte a require(esm), adição da API WebSocket e mais. Jun 19, 2026 · A practical tour of what actually changed in Node.js 22: require(esm) interop, a built-in WebSocket client, a stable watch mode, and the V8 12.4 upgrade underneath it all.",
+    "url": "https://versionlog.com/nodejs/22/",
+    "coherence_percentage": "38.09%",
+    "latency_ms": 0.06620003841817379
+  },
+  "777f6e12792dac39": {
+    "query": "Quali sono le novità principali introdotte in Node.js 22 LTS?",
+    "timestamp": "2026-09-29 09:10:16",
+    "winner_id": "SRC_1",
+    "title": "What's New in Node.js 22? | Syncfusion Blogs",
+    "content": "February 10, 2026 - This blog explains the exciting new features and enhancements in Node.js 22, including ESM support, WebSocket client, and V8 engine updates.",
+    "url": "https://www.syncfusion.com/blogs/post/whats-new-in-node-js-22",
+    "coherence_percentage": 33.3,
+    "latency_ms": 0.053
+  },
+  "3c634e17581640c2": {
+    "query": "Ciao Damon",
+    "timestamp": "2026-09-29 18:07:03",
+    "winner_id": "SRC_1",
+    "title": "Ciao amore, ciao",
+    "content": "\"Ciao amore, ciao\" (Italian pronunciation: [ˈtʃaːo aˈmoːre ˈtʃaːo]; \"Bye, My Love, Bye\") is a 1967 song written by Italian singer-songwriter Luigi Tenco, first performed at the Sanremo Music Festival 1967, in two separate renditions, by Tenco and Italian-French singer Dalida.The song is best remembered for being Tenco's last performance before his apparent suicide on 27 January 1967, upon its elimination from the contest. One month later, Dalida, who was dating Tenco at the time of his death, attempted suicide as well.",
+    "url": "https://en.wikipedia.org/wiki/Ciao_amore,_ciao",
+    "coherence_percentage": 33.3,
+    "latency_ms": 0.112
+  },
+  "c9e9fc2d38ee2692": {
+    "query": "Disattiva Zero token reflex",
+    "timestamp": "2026-09-29 18:29:29",
+    "winner_id": "SRC_1",
+    "title": "$ZERO Token Distribution Scam - Removal and recovery steps - PCrisk",
+    "content": "The scam claims to be distributing ZERO tokens. It must be emphasized that this token giveaway is fake, and it is not associated with any existing platforms or entities.",
+    "url": "https://www.pcrisk.com/removal-guides/30422-zero-token-distribution-scam",
+    "coherence_percentage": 33.3,
+    "latency_ms": 0.145
+  },
+  "509f562907a86428": {
+    "query": "Controlla il mio il mio pc",
+    "timestamp": "2026-09-29 18:50:24",
+    "winner_id": "SRC_1",
+    "title": "Valuta il mio PC - Test le prestazioni PC per il gaming - IObit",
+    "content": "Questo tool di verifica specifiche permette di valuta il mio pc e test pc: confronta le prestazioni del tuo PC o laptop con i giochi più popolari e il nostro database di configurazioni utente.",
+    "url": "https://www.iobit.com/it/valuta-il-mio-pc.php",
+    "coherence_percentage": 33.3,
+    "latency_ms": 0.179
+  },
+  "2f311e49bd74a4c7": {
+    "query": "python -c \"print('ALL TESTS PASSED: SILICON CONVERGENCE ACHIEVED')\"",
+    "timestamp": "2026-09-30 10:15:08",
+    "winner_id": "SRC_1",
+    "title": "Mocking print() in Unit Tests (Video) – Real Python",
+    "content": "If you were using a test harness like pytest, it would actually print out results showing you how many of your tests had passed. Published: May 5, 2020",
+    "url": "https://realpython.com/lessons/mocking-print-unit-tests/",
+    "coherence_percentage": 33.3,
+    "latency_ms": 0.086
+  },
+  "35e121a7409182ab": {
+    "query": "echo 'HEXAD verified step'",
+    "timestamp": "2026-09-30 16:42:21",
+    "winner_id": "SRC_1",
+    "title": "ECHO: Elastic Speculative Decoding with Sparse Gating for High ...",
+    "content": "Crucially, ECHO employs sparse confidence gating to manage the batch as a unified super-tree, elastically pivoting budget between depth and width to co-optimize the trade-off between reducing global verification steps and maximizing per-step efficiency.",
+    "url": "https://icml.cc/virtual/2026/oral/71057",
+    "coherence_percentage": 33.3,
+    "latency_ms": 0.1
+  }
+}

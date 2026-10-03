@@ -17,12 +17,23 @@ import os
 import time
 from typing import Dict, Any, List, Optional
 
-# Percorso delle directory dei 6 motori sul Desktop o relative
-desktop_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-for eng in ["Oculus-Engine", "Coris-Engine", "Anima-Engine", "Mneme-Engine", "Demon-Engine", "Peira-Engine"]:
-    ep = os.path.join(desktop_dir, eng)
-    if os.path.exists(ep) and ep not in sys.path:
-        sys.path.insert(0, ep)
+# Percorso delle directory dei motori: cerca prima internamente in ./engines/ (standalone package), poi in ./ e infine in ../
+current_dir = os.path.dirname(os.path.abspath(__file__))
+search_bases = [
+    os.path.join(current_dir, "engines"),
+    current_dir,
+    os.path.abspath(os.path.join(current_dir, ".."))
+]
+engine_names = [
+    "Oculus-Engine", "Coris-Engine", "Anima-Engine", 
+    "Mneme-Engine", "Demon-Engine", "Peira-Engine",
+    "Lunar-Engine", "Daedalus-Engine"
+]
+for base in search_bases:
+    for eng in engine_names:
+        ep = os.path.join(base, eng)
+        if os.path.exists(ep) and ep not in sys.path:
+            sys.path.insert(0, ep)
 
 from hexad_guardian import HexadGuardian, InvarianceVerificationResult
 
@@ -76,6 +87,18 @@ try:
 except ImportError:
     HAS_DEMON_GATE = False
 
+try:
+    from lunar_engine import LunarEngine
+    HAS_LUNAR = True
+except ImportError:
+    HAS_LUNAR = False
+
+try:
+    from daedalus_engine import DaedalusEngine
+    HAS_DAEDALUS = True
+except ImportError:
+    HAS_DAEDALUS = False
+
 
 class HexadOracle:
     """
@@ -87,7 +110,7 @@ class HexadOracle:
         self.workspace_dir = os.path.abspath(workspace_dir)
         self.guardian = HexadGuardian(self.workspace_dir)
 
-        # Inizializzazione dei 6 motori (con failover automatico a POLYPUS a 3 cuori se disponibile)
+        # Inizializzazione dei 6 motori + estensioni LUNAR & DAEDALUS
         self.oculus = OculusEngine() if HAS_OCULUS else None
         if HAS_POLYPUS:
             self.coris = PolypusEngine()
@@ -99,6 +122,8 @@ class HexadOracle:
         self.mneme = MnemeEngine(state_dim=5, alpha=0.15) if HAS_MNEME else None
         self.demon = DemonGateway() if HAS_DEMON else None
         self.peira = PeiraEngine(timeout_sec=8.0) if HAS_PEIRA else None
+        self.lunar = LunarEngine() if HAS_LUNAR else None
+        self.daedalus = DaedalusEngine() if HAS_DAEDALUS else None
 
     # =========================================================================
     # 1. INITIALIZATION & REPO DNA ONBOARDING
@@ -122,7 +147,9 @@ class HexadOracle:
                 "3_ANIMA": HAS_ANIMA,
                 "4_MNEME": HAS_MNEME,
                 "5_DEMON": HAS_DEMON,
-                "6_PEIRA": HAS_PEIRA
+                "6_PEIRA": HAS_PEIRA,
+                "LUNAR_SENTINEL": HAS_LUNAR,
+                "DAEDALUS_ARIADNE": HAS_DAEDALUS
             },
             "coris_architecture": "POLYPUS_TRI_VENTRICULAR" if HAS_POLYPUS else ("STANDARD" if HAS_CORIS else "OFFLINE")
         }

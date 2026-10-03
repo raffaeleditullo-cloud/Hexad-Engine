@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.tmp
+test_immune_memory.json
+immune_memory.json
+.DS_Store
