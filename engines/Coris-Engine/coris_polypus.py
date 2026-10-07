@@ -83,9 +83,18 @@ class PolypusEngine:
         """Scansione antigenica a monte tramite il sistema linfatico condiviso."""
         return self.systemic_heart.check_antigen_binding(candidate_text)
 
-    def synthesize_antibody(self, signature: str, source_layer: str, rule: str) -> Optional[Antibody]:
+    def synthesize_antibody(
+        self,
+        signature: str = "",
+        source_layer: str = "SYSTEM",
+        rule: str = "BLOCK",
+        pattern_signature: Optional[str] = None,
+        neutralization_rule: Optional[str] = None
+    ) -> Optional[Antibody]:
         """Sintesi linfatica istantanea di un nuovo anticorpo contro i crash."""
-        ab = self.systemic_heart.synthesize_antibody(signature, source_layer, rule)
+        sig = pattern_signature or signature
+        rl = neutralization_rule or rule
+        ab = self.systemic_heart.synthesize_antibody(sig, source_layer, rl)
         if ab:
             # Sincronizza lo stato nei cuori ausiliari
             self.branchial_context_heart.antibodies[ab.epitope_hash] = ab
@@ -226,3 +235,11 @@ class PolypusEngine:
             necrotic_modules=[],
             status=telem.effective_status
         )
+
+    def drain_context_hemodynamics(
+        self,
+        context_items: List[Dict[str, Any]],
+        retention_ratio: float = 0.5
+    ) -> Tuple[List[Dict[str, Any]], int]:
+        """Interfaccia polimorfica standard: delega il drenaggio alla branchia contestuale."""
+        return self.branchial_context_heart.drain_context_hemodynamics(context_items, retention_ratio)

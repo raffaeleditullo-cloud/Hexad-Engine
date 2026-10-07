@@ -265,7 +265,9 @@ class HexadOracle:
         context_sample: Optional[List[Dict[str, Any]]] = None,
         observed_error_rate: float = 0.0,
         observed_latency_ms: float = 10.0,
-        auto_repair: bool = True
+        auto_repair: bool = True,
+        force_polypus_purge: bool = False,
+        offending_statement: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Esegue il controllo di taratura dell'agente LLM:
@@ -277,6 +279,8 @@ class HexadOracle:
            - Drena scorie metaboliche dal contesto (traceback, loop, token spuri).
            - Riancora la fovea di OCULUS sui nodi del workspace reale.
            - Esegue il riallineamento di fase armonico LUNAR.
+           - Se H% >= 45.0% (CALIBRATION_HALLUCINATION_CRITICAL): sintetizza un anticorpo
+             permanente da frattura semantica salvato in immune_memory.json (immunità perenne).
         """
         start_time = time.perf_counter()
         repair_actions = []
@@ -317,12 +321,12 @@ class HexadOracle:
         # 3. Purga contestuale se ci sono scorie metaboliche
         purged_waste_count = 0
         cleaned_context = context_sample
-        if self.coris and context_sample:
+        if self.coris and (context_sample or force_polypus_purge):
             try:
                 if hasattr(self.coris, "drain_context_hemodynamics"):
-                    cleaned_context, purged_waste_count = self.coris.drain_context_hemodynamics(context_sample)
+                    cleaned_context, purged_waste_count = self.coris.drain_context_hemodynamics(context_sample or [])
                 elif hasattr(self.coris, "branchial_context_heart"):
-                    cleaned_context, purged_waste_count = self.coris.branchial_context_heart.drain_context_hemodynamics(context_sample)
+                    cleaned_context, purged_waste_count = self.coris.branchial_context_heart.drain_context_hemodynamics(context_sample or [])
             except Exception:
                 purged_waste_count = 0
 
@@ -360,6 +364,9 @@ class HexadOracle:
         # 6. Riparazioni Automatiche (se richieste)
         post_h_pct = h_pct
         r_post = r_current
+        synthesized_antibody: Optional[str] = None
+        offending_epitope: Optional[str] = None
+
         if auto_repair:
             if purged_waste_count > 0:
                 repair_actions.append(f"Purga emodinamica: eliminate {purged_waste_count} scorie metaboliche dal contesto (traceback/loop).")
@@ -376,6 +383,52 @@ class HexadOracle:
                     repair_actions.append(f"Resincronizzazione armonica LUNAR completata: coerenza post-riparazione r={r_post:.3f}.")
                 except Exception:
                     repair_actions.append("Sincronia armonica LUNAR confermata.")
+
+            # --- ANTICORPI DA FRATTURA SEMANTICA: Soglia H% >= 45.0% (CALIBRATION_HALLUCINATION_CRITICAL) ---
+            if h_pct >= 45.0:
+                candidate_epitope = offending_statement
+                if not candidate_epitope and context_sample:
+                    for item in reversed(context_sample):
+                        content = item.get("content", "")
+                        role = item.get("role", "")
+                        if role in ("assistant", "model", "system") and content:
+                            candidate_epitope = str(content).strip()
+                            break
+                    if not candidate_epitope and context_sample:
+                        candidate_epitope = str(context_sample[-1].get("content", "")).strip()
+
+                if candidate_epitope:
+                    sig = candidate_epitope.strip()
+                    if len(sig) > 140:
+                        lines = [l.strip() for l in sig.split("\n") if l.strip()]
+                        sig = lines[0][:140] if lines else sig[:140]
+                    offending_epitope = sig
+
+                    if self.coris and hasattr(self.coris, "synthesize_antibody"):
+                        try:
+                            ab = self.coris.synthesize_antibody(
+                                sig,
+                                "AUTO_PURGED_HALLUCINATION",
+                                "BLOCK"
+                            )
+                            if ab:
+                                synthesized_antibody = ab.epitope_hash
+                                repair_actions.append(
+                                    f"Anticorpo da Frattura Semantica (H%={h_pct}%): sintetizzato hash={ab.epitope_hash} "
+                                    f"per '{sig[:50]}...' salvato in immune_memory.json (Immunità Permanente)."
+                                )
+                        except Exception as e:
+                            repair_actions.append(f"Avviso sintesi anticorpo CORIS: {e}")
+
+                    if self.thymus and hasattr(self.thymus, "synthesize_antibody"):
+                        try:
+                            self.thymus.synthesize_antibody(
+                                failure_signature=sig,
+                                category="AUTO_PURGED_HALLUCINATION",
+                                description=f"Allucinazione critica H={h_pct}%: {sig[:60]}"
+                            )
+                        except Exception:
+                            pass
 
             total_inv = sum(len(syms) for syms in self.guardian.invariants.values())
             repair_actions.append(f"Barriera Invarianti GUARDIAN: {total_inv} simboli sovrani protetti e verificati.")
@@ -411,6 +464,8 @@ class HexadOracle:
             "focal_target": focal_target,
             "purged_metabolic_waste": purged_waste_count,
             "cleaned_context": cleaned_context,
+            "synthesized_antibody": synthesized_antibody,
+            "offending_epitope": offending_epitope,
             "repair_actions": repair_actions,
             "report_text": report_text,
             "latency_ms": total_time_ms
@@ -452,7 +507,8 @@ class HexadOracle:
             context_sample=context_history,
             observed_error_rate=0.75,
             observed_latency_ms=180.0,
-            auto_repair=auto_repair
+            auto_repair=auto_repair,
+            offending_statement=user_query if not context_history else None
         )
 
         return {
@@ -532,8 +588,15 @@ class HexadOracle:
                     distress = self.myia.detect_cognitive_distress(current_query)
                     if distress.should_trigger_calibration:
                         audit_log.append(f"[0. MYIA] Rilevata sofferenza cognitiva ({distress.signal_type}): Trigger calibrazione spontanea!")
-                        c_repair = self.calibrate_and_repair(context_sample=None, observed_error_rate=0.75, auto_repair=True)
+                        c_repair = self.calibrate_and_repair(
+                            context_sample=None,
+                            observed_error_rate=0.75,
+                            auto_repair=True,
+                            offending_statement=None
+                        )
                         audit_log.append(f"[0. MYIA] Calibrazione spontanea eseguita: H={c_repair['hallucination_pct_initial']}% -> {c_repair['hallucination_pct_post_repair']}% ({c_repair['verdict']})")
+                        if c_repair.get("synthesized_antibody"):
+                            audit_log.append(f"[0. MYIA] Vaccino da Frattura sintetizzato: {c_repair['synthesized_antibody']} ({c_repair.get('offending_epitope', '')[:40]}...)")
 
             if self.chronos:
                 chronos_res = self.chronos.forecast_system_trajectory()
@@ -567,7 +630,7 @@ class HexadOracle:
                 threat = self.coris.check_antigen_binding(current_query)
                 if threat:
                     audit_log.append(f"[2. CORIS] Antigene intercettato: {threat.epitope_hash}")
-                    return {"status": "BLOCKED_BY_CORIS", "audit": audit_log}
+                    return {"status": "BLOCKED_BY_CORIS", "audit_trail": audit_log, "audit": audit_log}
                 audit_log.append(f"[2. CORIS] Pressione={vitals.homeostatic_pressure_P:.2f}, Free Energy={vitals.free_energy_F:.2f}")
 
             # 3. ANIMA, PROMETHEUS & DAEDALUS: Path Integral, Anticipatory Simulation & Anti-Deadlock
@@ -606,6 +669,15 @@ class HexadOracle:
             # Le tracce possono portare il comando in "code" o in "command"
             chosen_command = chosen_trace.get("code") or chosen_trace.get("command") or ""
 
+            # Verifica Immunitaria sul Ramo Selezionato: rigetta rami che contengono antigeni vietati
+            if self.coris and chosen_command:
+                bound_ab = self.coris.check_antigen_binding(chosen_command)
+                if bound_ab:
+                    audit_log.append(f"[2. CORIS] Blocco Antigene: ramo '{chosen_branch_id}' viola anticorpo {bound_ab.epitope_hash} ('{bound_ab.pattern_signature[:40]}')")
+                    excluded_branches.append(chosen_branch_id)
+                    retries += 1
+                    continue
+
             if self.daedalus:
                 deadlock_risk = (chosen_branch_id in excluded_branches)
                 if deadlock_risk:
@@ -620,7 +692,7 @@ class HexadOracle:
                 cert = self.mneme.certify_trajectory_stability(st, velocity_vector=vel)
                 if not cert.is_stable:
                     audit_log.append(f"[4. MNEME] Divergenza rilevata: {cert.rejection_reason}")
-                    return {"status": "ABORTED_BY_MNEME", "audit": audit_log}
+                    return {"status": "ABORTED_BY_MNEME", "audit_trail": audit_log, "audit": audit_log}
                 audit_log.append(f"[4. MNEME] Stabilità certificata: dV/dt={cert.v_dot:+.4f}, max(Re(λ))={cert.max_real_eigenvalue:+.4f}")
 
             if self.nous:
@@ -678,6 +750,7 @@ class HexadOracle:
                         "cycles_used": retries + 1,
                         "delta": impact.delta_empirico,
                         "output": impact.stdout,
+                        "excluded_branches": list(excluded_branches),
                         "audit_trail": audit_log,
                         "latency_ms": round(total_time, 2)
                     }

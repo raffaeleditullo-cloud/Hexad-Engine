@@ -138,7 +138,8 @@ def main():
                                 "context_sample": {"type": "array", "items": {"type": "object"}, "description": "Optional conversation messages/items to inspect and purge."},
                                 "observed_error_rate": {"type": "number", "description": "Observed error rate (0.0 to 1.0)."},
                                 "observed_latency_ms": {"type": "number", "description": "Observed execution latency in ms."},
-                                "auto_repair": {"type": "boolean", "description": "Apply physical repairs (context purge, foveal reset, harmonic lock). Default true."}
+                                "auto_repair": {"type": "boolean", "description": "Apply physical repairs (context purge, foveal reset, harmonic lock). Default true."},
+                                "offending_statement": {"type": "string", "description": "Optional offending hallucinated statement to synthesize into a permanent antibody if H% >= 45%."}
                             }
                         }
                     },
@@ -498,7 +499,8 @@ def main():
                         context_sample=args.get("context_sample"),
                         observed_error_rate=float(args.get("observed_error_rate", 0.0)),
                         observed_latency_ms=float(args.get("observed_latency_ms", 10.0)),
-                        auto_repair=bool(args.get("auto_repair", True))
+                        auto_repair=bool(args.get("auto_repair", True)),
+                        offending_statement=args.get("offending_statement")
                     )
                     sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
                         "content": [
