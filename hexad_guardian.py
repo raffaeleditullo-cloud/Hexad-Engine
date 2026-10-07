@@ -89,7 +89,13 @@ class HexadGuardian:
         if os.path.exists(self.antibodies_file):
             try:
                 with open(self.antibodies_file, "r", encoding="utf-8") as f:
-                    self.antibodies = json.load(f)
+                    raw_ab = json.load(f)
+                    if isinstance(raw_ab, dict):
+                        self.antibodies = raw_ab.get("antibodies", [])
+                    elif isinstance(raw_ab, list):
+                        self.antibodies = raw_ab
+                    else:
+                        self.antibodies = []
             except Exception as e:
                 # FAIL-CLOSED: Non silenziare la corruzione degli anticorpi
                 self.integrity_status = "INTEGRITY_FAILURE"
@@ -388,7 +394,9 @@ class HexadGuardian:
     def check_regression_risk(self, code_snippet: str) -> Optional[Dict[str, Any]]:
         """Rileva se uno snippet contiene un pattern noto di fallimento pregresso."""
         for ab in self.antibodies:
-            sig = ab.get("signature", "")
+            if not isinstance(ab, dict):
+                continue
+            sig = ab.get("signature") or ab.get("epitope_signature", "")
             if sig and (sig in code_snippet or hashlib.sha256(code_snippet.encode()).hexdigest()[:12] == sig):
                 return ab
         return None

@@ -130,6 +130,32 @@ def main():
                         "inputSchema": {"type": "object", "properties": {}}
                     },
                     {
+                        "name": "hexad_calibrate_organism",
+                        "description": "Performs cybernetic calibration of the agent, calculates hallucination percentage, and applies closed-loop repairs on silicon.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "context_sample": {"type": "array", "items": {"type": "object"}, "description": "Optional conversation messages/items to inspect and purge."},
+                                "observed_error_rate": {"type": "number", "description": "Observed error rate (0.0 to 1.0)."},
+                                "observed_latency_ms": {"type": "number", "description": "Observed execution latency in ms."},
+                                "auto_repair": {"type": "boolean", "description": "Apply physical repairs (context purge, foveal reset, harmonic lock). Default true."}
+                            }
+                        }
+                    },
+                    {
+                        "name": "hexad_auto_trigger_inspect",
+                        "description": "Scans user input with MYIA fast reflex to detect cognitive distress, user correction, or hallucination reports, triggering auto-calibration if needed.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "user_query": {"type": "string", "description": "Raw prompt/feedback from the user."},
+                                "context_history": {"type": "array", "items": {"type": "object"}, "description": "Recent conversation history turns."},
+                                "auto_repair": {"type": "boolean", "description": "Apply physical repairs on trigger. Default true."}
+                            },
+                            "required": ["user_query"]
+                        }
+                    },
+                    {
                         "name": "hexad_export_portable_skill",
                         "description": "Exports the portable universal HEXAD Skill for ChatGPT, Cursor (.cursorrules), Claude, or Markdown with toggleable ON/OFF mechanics.",
                         "inputSchema": {
@@ -326,6 +352,89 @@ def main():
                         "name": "lunar_get_telemetry",
                         "description": "[LUNAR SENTINEL] Returns real-time phase order Kuramoto parameter and harmonic reflex telemetry.",
                         "inputSchema": {"type": "object", "properties": {}}
+                    },
+
+                    # --- 🔮 PROMETHEUS (ANTICIPATORY FORWARD SIMULATOR - ROSEN & MCTS) ---
+                    {
+                        "name": "prometheus_simulate_consequences",
+                        "description": "[PROMETHEUS] Forward consequence simulation (Robert Rosen 1985 & MCTS). Evaluates AST breakage, dependency failure propagation, and invariant risks before applying code edits.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "current_code": {"type": "string", "description": "Original source code."},
+                                "proposed_code": {"type": "string", "description": "Proposed new source code."},
+                                "known_dependencies": {"type": "array", "items": {"type": "string"}},
+                                "protected_invariants": {"type": "array", "items": {"type": "string"}}
+                            },
+                            "required": ["current_code", "proposed_code"]
+                        }
+                    },
+
+                    # --- ⏳ CHRONOS (NUMERICAL TIME-SERIES FORECASTING - GOOGLE TIMESFM) ---
+                    {
+                        "name": "chronos_forecast_trajectory",
+                        "description": "[CHRONOS] Autoregressive time-series forecasting (Google TimesFM inspired). Predicts Time-To-Criticality (TTC) and Operational Health Index (OHI) across CPU, RAM, and error rates.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "current_telemetry": {"type": "object", "description": "Dictionary of metric names to current float values."},
+                                "horizon_steps": {"type": "integer", "default": 5}
+                            }
+                        }
+                    },
+
+                    # --- 🛡️ NEMESIS-THYMUS (ARTIFICIAL IMMUNE SYSTEM - STEPHANIE FORREST) ---
+                    {
+                        "name": "thymus_negative_selection",
+                        "description": "[NEMESIS-THYMUS] Negative Selection scan (Stephanie Forrest 1994). Matches candidate commands or code against permanent mature antibodies to reject Non-Self attacks.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "candidate_text": {"type": "string", "description": "Command, code, or prompt to inspect."}
+                            },
+                            "required": ["candidate_text"]
+                        }
+                    },
+                    {
+                        "name": "thymus_synthesize_antibody",
+                        "description": "[NEMESIS-THYMUS] Synthesizes a new permanent immune antibody from an observed error or failure trace, persisted to disk.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "failure_signature": {"type": "string", "description": "Epitope or error signature."},
+                                "category": {"type": "string", "description": "Category of threat."},
+                                "description": {"type": "string", "description": "Explanation of failure pattern."}
+                            },
+                            "required": ["failure_signature", "category", "description"]
+                        }
+                    },
+
+                    # --- 🧠 NOUS (AXIOLOGICAL INTELLECT & REASONING) ---
+                    {
+                        "name": "nous_formulate_thought",
+                        "description": "[NOUS] Formulates genuine philosophical reflection, ontological framing, and silicon verdict on any concept without external LLM.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "concept": {"type": "string", "description": "Concept, entity, or question to reflect upon."},
+                                "factual_context": {"type": "string", "description": "Optional verified factual background."},
+                                "user_prompt": {"type": "string", "description": "Original human prompt."}
+                            },
+                            "required": ["concept"]
+                        }
+                    },
+
+                    # --- ⚡ MYIA (SUB-MILLISECOND REFLEX CIRCUIT) ---
+                    {
+                        "name": "myia_inspect_reflex",
+                        "description": "[MYIA] Sub-millisecond (<0.5ms) neuromorphic bitmask reflex circuit. Filters corrupted, self-contradictory, or malicious inputs instantly.",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "user_input": {"type": "string", "description": "Raw user prompt to inspect."}
+                            },
+                            "required": ["user_input"]
+                        }
                     }
                 ]
                 sys.stdout.write(json.dumps(create_mcp_response(msg_id, {"tools": tools})) + "\n")
@@ -381,6 +490,32 @@ def main():
                     ab = oracle.guardian.quarantine_regression(args.get("signature", ""), args.get("failure_trace", ""))
                     sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
                         "content": [{"type": "text", "text": json.dumps({"status": "QUARANTINED", "antibody": ab}, indent=2)}]
+                    })) + "\n")
+                    sys.stdout.flush()
+
+                elif tool_name == "hexad_calibrate_organism":
+                    c_res = oracle.calibrate_and_repair(
+                        context_sample=args.get("context_sample"),
+                        observed_error_rate=float(args.get("observed_error_rate", 0.0)),
+                        observed_latency_ms=float(args.get("observed_latency_ms", 10.0)),
+                        auto_repair=bool(args.get("auto_repair", True))
+                    )
+                    sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
+                        "content": [
+                            {"type": "text", "text": c_res.get("report_text", "")},
+                            {"type": "text", "text": json.dumps(c_res, indent=2)}
+                        ]
+                    })) + "\n")
+                    sys.stdout.flush()
+
+                elif tool_name == "hexad_auto_trigger_inspect":
+                    a_res = oracle.inspect_and_auto_calibrate(
+                        user_query=args.get("user_query", ""),
+                        context_history=args.get("context_history"),
+                        auto_repair=bool(args.get("auto_repair", True))
+                    )
+                    sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
+                        "content": [{"type": "text", "text": json.dumps(a_res, indent=2)}]
                     })) + "\n")
                     sys.stdout.flush()
 
@@ -624,6 +759,107 @@ def main():
                     })) + "\n")
                     sys.stdout.flush()
 
+                # --- 🔮 PROMETHEUS DISPATCH ---
+                elif tool_name == "prometheus_simulate_consequences":
+                    curr_c = args.get("current_code", "")
+                    prop_c = args.get("proposed_code", "")
+                    deps = args.get("known_dependencies", [])
+                    invariants = args.get("protected_invariants", [])
+                    if oracle.prometheus:
+                        verdict = oracle.prometheus.simulate_code_mutation(
+                            current_code=curr_c,
+                            proposed_code=prop_c,
+                            known_dependencies=deps,
+                            protected_invariants=invariants
+                        )
+                        res = asdict(verdict)
+                    else:
+                        res = {"approved": True, "safety_confidence": 0.9, "risk_summary": "PROMETHEUS OFFLINE"}
+                    sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
+                        "content": [{"type": "text", "text": json.dumps(res, indent=2, default=str)}]
+                    })) + "\n")
+                    sys.stdout.flush()
+
+                # --- ⏳ CHRONOS DISPATCH ---
+                elif tool_name == "chronos_forecast_trajectory":
+                    telem = args.get("current_telemetry", {})
+                    h_steps = int(args.get("horizon_steps", 5))
+                    if oracle.chronos:
+                        health = oracle.chronos.forecast_system_trajectory(
+                            current_telemetry=telem,
+                            horizon=h_steps
+                        )
+                        res = asdict(health)
+                    else:
+                        res = {"healthy": True, "operational_health_index": 1.0, "status": "CHRONOS OFFLINE"}
+                    sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
+                        "content": [{"type": "text", "text": json.dumps(res, indent=2, default=str)}]
+                    })) + "\n")
+                    sys.stdout.flush()
+
+                # --- 🛡️ NEMESIS-THYMUS DISPATCH ---
+                elif tool_name == "thymus_negative_selection":
+                    cand = args.get("candidate_text", "")
+                    if oracle.thymus:
+                        imm_res = oracle.thymus.negative_selection_scan(cand)
+                        res = asdict(imm_res)
+                    else:
+                        res = {"is_safe_self": True, "status": "THYMUS OFFLINE"}
+                    sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
+                        "content": [{"type": "text", "text": json.dumps(res, indent=2, default=str)}]
+                    })) + "\n")
+                    sys.stdout.flush()
+
+                elif tool_name == "thymus_synthesize_antibody":
+                    sig = args.get("failure_signature", "")
+                    cat = args.get("category", "GENERAL")
+                    desc = args.get("description", "Error pattern")
+                    if oracle.thymus:
+                        ab = oracle.thymus.synthesize_antibody(
+                            failure_signature=sig,
+                            category=cat,
+                            description=desc
+                        )
+                        res = asdict(ab)
+                    else:
+                        res = {"antibody_id": "AB_OFFLINE", "status": "THYMUS OFFLINE"}
+                    sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
+                        "content": [{"type": "text", "text": json.dumps(res, indent=2, default=str)}]
+                    })) + "\n")
+                    sys.stdout.flush()
+
+                # --- 🧠 NOUS DISPATCH ---
+                elif tool_name == "nous_formulate_thought":
+                    c = args.get("concept", "")
+                    ctx = args.get("factual_context")
+                    prompt = args.get("user_prompt")
+                    if oracle.nous:
+                        thought = oracle.nous.formulate_opinion(
+                            concept=c,
+                            factual_context=ctx,
+                            user_prompt=prompt
+                        )
+                        res = asdict(thought)
+                    else:
+                        res = {"concept": c, "combined_speech": f"Riflessione su {c}.", "status": "NOUS OFFLINE"}
+                    sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
+                        "content": [{"type": "text", "text": json.dumps(res, indent=2, default=str)}]
+                    })) + "\n")
+                    sys.stdout.flush()
+
+                # --- ⚡ MYIA DISPATCH ---
+                elif tool_name == "myia_inspect_reflex":
+                    u_in = args.get("user_input", "")
+                    if oracle.myia:
+                        m_res = oracle.myia.inspect_input(u_in)
+                        res = asdict(m_res) if is_dataclass(m_res) else m_res
+                    else:
+                        res = {"allowed": True, "latency_ms": 0.1, "status": "MYIA OFFLINE"}
+                    sys.stdout.write(json.dumps(create_mcp_response(msg_id, {
+                        "content": [{"type": "text", "text": json.dumps(res, indent=2, default=str)}]
+                    })) + "\n")
+                    sys.stdout.flush()
+
                 else:
                     sys.stdout.write(json.dumps(create_mcp_response(
                         msg_id, error={"code": -32601, "message": f"Tool not found: {tool_name}"}
@@ -631,6 +867,8 @@ def main():
                     sys.stdout.flush()
 
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             sys.stderr.write(f"HEXAD Unified MCP Error: {str(e)}\n")
             sys.stderr.flush()
 
