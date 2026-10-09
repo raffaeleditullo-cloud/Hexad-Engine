@@ -24,6 +24,8 @@ La skill è **completamente controllabile e disattivabile** in qualsiasi momento
 
 > ⚡ **TRIGGER EURISTICO AUTOMATICO (REAZIONE SPONTANEA)**: Non è necessario digitare sempre il comando. Se segnali un'allucinazione o una frattura (es. *"stai allucinando"*, *"ti sei inventato tutto"*, *"frattura logica"*) o ripeti obiezioni d'errore (*"non funziona"*, *"hai sbagliato"*), il recettore sensoriale MYIA attiva spontaneamente la purga emodinamica e la ricalibrazione prima di rispondere.
 
+> 💉 **ANTICORPI DA FRATTURA SEMANTICA ($H_{\%} \ge 45\%$)**: Se il grado di allucinazione tocca la soglia critica ($H_{\%} \ge 45\%$), l'organismo non si limita a pulire il contesto: estrae l'affermazione o il comando allucinato e sintetizza un anticorpo permanente salvato su disco in `immune_memory.json` (sotto CORIS e THYMUS). Nei turni futuri, qualsiasi tentativo dell'AI di riproporre quella stessa allucinazione viene neutralizzato all'istante ($0\text{ token}$ sprecati).
+
 ---
 
 ## 🏛️ I 5 DECRETI SOVRANI INVIOLABILI (QUANDO HEXAD È ATTIVO)
