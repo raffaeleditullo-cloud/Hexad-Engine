@@ -93,30 +93,18 @@ OCULUS exposes a stdio JSON-RPC 2.0 server (`oculus_mcp.py`).
 * **`oculus_calibrate_sensory_proxy`**: Analyzes code entropy and provides tuning parameters for ANIMA.
 * **`oculus_inspect_symbol`**: Surgical inspection of any function or class symbol.
 
-### Claude Code CLI Setup
+### Claude Code CLI Setup (via Master HEXAD MCP)
 ```bash
-claude mcp add oculus-engine python c:/Users/stree/Desktop/Oculus-Engine/oculus_mcp.py
+claude mcp add hexad-engine python /path/to/HEXAD/Hexad-Engine/hexad_mcp.py
 ```
 
-### Full Tetrad MCP Configuration (`mcp.json` for Cursor / Windsurf)
+### Master MCP Configuration (`mcp.json` for Cursor / Windsurf)
 ```json
 {
   "mcpServers": {
-    "oculus-engine": {
+    "hexad-engine": {
       "command": "python",
-      "args": ["c:/Users/stree/Desktop/Oculus-Engine/oculus_mcp.py"]
-    },
-    "anima-engine": {
-      "command": "python",
-      "args": ["c:/Users/stree/Desktop/Anima-Engine/anima_mcp.py"]
-    },
-    "coris-engine": {
-      "command": "python",
-      "args": ["c:/Users/stree/Desktop/Coris-Engine/coris_mcp.py"]
-    },
-    "demon-engine": {
-      "command": "python",
-      "args": ["c:/Users/stree/Desktop/Demon-Engine/demon_mcp.py"]
+      "args": ["/path/to/HEXAD/Hexad-Engine/hexad_mcp.py"]
     }
   }
 }

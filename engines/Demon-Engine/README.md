@@ -168,19 +168,19 @@ DEMON exposes a high-speed, zero-dependency stdio JSON-RPC MCP server (`demon_mc
 
 ### 🔌 Connecting DEMON to Your Agents:
 
-#### 1. Claude Code CLI
-Add DEMON directly to your Claude Code workspace:
+#### 1. Claude Code CLI (via Master HEXAD MCP)
+Add all 29 tools including DEMON powers to Claude Code:
 ```bash
-claude mcp add demon-engine python c:/Users/stree/Desktop/DEMON/demon_mcp.py
+claude mcp add hexad-engine python /path/to/HEXAD/Hexad-Engine/hexad_mcp.py
 ```
 
 #### 2. Claude Desktop (`claude_desktop_config.json`)
 ```json
 {
   "mcpServers": {
-    "demon-engine": {
+    "hexad-engine": {
       "command": "python",
-      "args": ["c:/Users/stree/Desktop/DEMON/demon_mcp.py"]
+      "args": ["/path/to/HEXAD/Hexad-Engine/hexad_mcp.py"]
     }
   }
 }
@@ -190,9 +190,9 @@ claude mcp add demon-engine python c:/Users/stree/Desktop/DEMON/demon_mcp.py
 ```json
 {
   "mcpServers": {
-    "demon-engine": {
+    "hexad-engine": {
       "command": "python",
-      "args": ["c:/Users/stree/Desktop/DEMON/demon_mcp.py"]
+      "args": ["/path/to/HEXAD/Hexad-Engine/hexad_mcp.py"]
     }
   }
 }

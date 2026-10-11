@@ -1,14 +1,9 @@
 """
-PEIRA Phase 1: Model Context Protocol (MCP) Server
-The Empirical Grounding, Physical Impact & Closed-Loop Crucible.
-
-Protocol: stdio JSON-RPC 2.0 (compatible with Claude Code, Cursor, Windsurf, Antigravity)
-
-Exposed Tools:
-1. peira_evaluate_empirical_impact: Evaluates execution results, computes Delta_emp, returns convergence or fracture payload.
-2. peira_execute_sandboxed_trial: Executes a real physical trial against the OS/compiler, measuring empirical friction.
-3. peira_inject_fracture_feedback: Builds coordinated fracture payload for OCULUS fovea, CORIS antibody, and MNEME rejection.
-4. peira_audit_hexad_loop: Audits the full 6-Engine Closed Hexad (PEIRA <-> OCULUS -> CORIS -> ANIMA -> MNEME -> DEMON).
+[DEPRECATED / TEST HARNESS ONLY]
+PEIRA Legacy MCP Server: Conservato esclusivamente come fixture per la test suite locale di Peira.
+Per qualsiasi utilizzo in produzione (Claude Code, Cursor, Windsurf, Antigravity, Lovable),
+utilizzare l'UNICO Master MCP Server alla radice della repository:
+    python hexad_mcp.py (espone tutti i 29 strumenti ufficiali).
 """
 
 import sys

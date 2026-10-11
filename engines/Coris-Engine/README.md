@@ -103,26 +103,18 @@ CORIS exposes a high-speed stdio JSON-RPC 2.0 server (`coris_mcp.py`).
 * **`coris_immune_scan`**: Pre-flight threat neutralization against known antigens.
 * **`coris_cellular_repair`**: Triggers self-healing on necrotic modules.
 
-### Claude Code CLI Setup
+### Claude Code CLI Setup (via Master HEXAD MCP)
 ```bash
-claude mcp add coris-engine python c:/Users/stree/Desktop/Coris-Engine/coris_mcp.py
+claude mcp add hexad-engine python /path/to/HEXAD/Hexad-Engine/hexad_mcp.py
 ```
 
-### Full Triad MCP Configuration (`mcp.json` for Cursor / Windsurf)
+### Master MCP Configuration (`mcp.json` for Cursor / Windsurf)
 ```json
 {
   "mcpServers": {
-    "anima-engine": {
+    "hexad-engine": {
       "command": "python",
-      "args": ["c:/Users/stree/Desktop/Anima-Engine/anima_mcp.py"]
-    },
-    "coris-engine": {
-      "command": "python",
-      "args": ["c:/Users/stree/Desktop/Coris-Engine/coris_mcp.py"]
-    },
-    "demon-engine": {
-      "command": "python",
-      "args": ["c:/Users/stree/Desktop/Demon-Engine/demon_mcp.py"]
+      "args": ["/path/to/HEXAD/Hexad-Engine/hexad_mcp.py"]
     }
   }
 }

@@ -134,18 +134,18 @@ ANIMA exposes a production-ready stdio JSON-RPC 2.0 MCP server (`anima_mcp.py`).
 * **`anima_batch_evaluate`**: Evaluates $N$ candidate traces with continuous action integrals in $<0.05\text{ ms}$.
 * **`anima_reset`**: Clears stream buffers.
 
-### Adding ANIMA to Claude Code
+### Adding to Claude Code (via Master HEXAD MCP)
 ```bash
-claude mcp add anima-engine python c:/Users/stree/Desktop/Anima-Engine/anima_mcp.py
+claude mcp add hexad-engine python /path/to/HEXAD/Hexad-Engine/hexad_mcp.py
 ```
 
-### Adding ANIMA to Cursor / Windsurf
+### Adding to Cursor / Windsurf
 ```json
 {
   "mcpServers": {
-    "anima-engine": {
+    "hexad-engine": {
       "command": "python",
-      "args": ["c:/Users/stree/Desktop/Anima-Engine/anima_mcp.py"]
+      "args": ["/path/to/HEXAD/Hexad-Engine/hexad_mcp.py"]
     }
   }
 }
