@@ -126,13 +126,17 @@ class NemesisThymusEngine:
         Crea un nuovo anticorpo permanente a partire da un errore o bug riscontrato.
         Maturazione timica: verifica che l'anticorpo non attacchi il codice sano (Self).
         """
+        clean_sig = failure_signature.strip() if failure_signature else ""
+        if not clean_sig:
+            return None
+
         # Calcolo ID univoco basato sull'epitopo
-        raw_id = hashlib.sha256(failure_signature.encode("utf-8")).hexdigest()[:10].upper()
+        raw_id = hashlib.sha256(clean_sig.encode("utf-8")).hexdigest()[:10].upper()
         ab_id = f"AB_{category}_{raw_id}"
 
         ab = ImmuneAntibody(
             antibody_id=ab_id,
-            epitope_signature=failure_signature,
+            epitope_signature=clean_sig,
             antigen_category=category,
             affinity_threshold=threshold,
             description=description,
@@ -150,6 +154,8 @@ class NemesisThymusEngine:
         Se matcha un anticorpo con affinità sufficiente, l'azione viene respinta come Non-Self.
         """
         for ab in self.antibodies.values():
+            if not ab.epitope_signature or not ab.epitope_signature.strip():
+                continue
             try:
                 # Matching tramite regex o inclusione letterale
                 if re.search(ab.epitope_signature, candidate_text, re.IGNORECASE):

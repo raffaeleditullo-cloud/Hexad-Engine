@@ -3,10 +3,15 @@ from PIL import Image
 import numpy as np
 import pathlib
 
-logos_dir = pathlib.Path(r"c:\Users\stree\Desktop\Mneme-Engine\logos")
+logos_dir = pathlib.Path(__file__).resolve().parent / "logos"
 logos_dir.mkdir(parents=True, exist_ok=True)
 
-img_p = pathlib.Path(r"C:\Users\stree\.gemini\antigravity\brain\a70d1552-e1ca-4aaa-a384-61ec646d76b3\mneme_symbol_v2_1790753820810.jpg")
+img_p = logos_dir / "master_source.jpg"
+if not img_p.exists():
+    img_p = pathlib.Path(__file__).resolve().parent / "logo.png"
+if not img_p.exists():
+    print("No source image found to process.")
+    sys.exit(0)
 img = Image.open(img_p).convert("RGB")
 arr = np.array(img, dtype=np.float32)
 
@@ -32,7 +37,7 @@ rgba[:, :, 3] = alpha
 master = Image.fromarray(rgba, "RGBA")
 master.save(logos_dir / "mneme_core_1024.png")
 master.resize((512, 512), Image.Resampling.LANCZOS).save(logos_dir / "mneme_core.png")
-master.resize((512, 512), Image.Resampling.LANCZOS).save(pathlib.Path(r"c:\Users\stree\Desktop\Mneme-Engine\logo.png"))
+master.resize((512, 512), Image.Resampling.LANCZOS).save(pathlib.Path(__file__).resolve().parent / "logo.png")
 
 # Create scalable SVG wrapper
 with open(logos_dir / "mneme_core.png", "rb") as f:
@@ -43,6 +48,6 @@ svg_content = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" 
 </svg>"""
 
 (logos_dir / "mneme_core.svg").write_text(svg_content, encoding="utf-8")
-(pathlib.Path(r"c:\Users\stree\Desktop\Mneme-Engine\logo.svg")).write_text(svg_content, encoding="utf-8")
+(pathlib.Path(__file__).resolve().parent / "logo.svg").write_text(svg_content, encoding="utf-8")
 
 print("Mneme transparent branding created successfully!")

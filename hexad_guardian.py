@@ -489,18 +489,20 @@ class HexadGuardian:
         """
         Converte qualsiasi forma del percorso (relativa, assoluta, con '/' o '\\', con './')
         nella chiave canonica usata dalla baseline. Ritorna None se il file è fuori dal workspace.
+        Garantisce compatibilità cross-platform perfetta tra Windows, Linux e macOS.
         """
         try:
-            abs_p = os.path.abspath(os.path.join(self.workspace_dir, target_file_path))
+            normalized_target = target_file_path.replace("\\", os.sep)
+            abs_p = os.path.abspath(os.path.join(self.workspace_dir, normalized_target))
             rel = os.path.normpath(os.path.relpath(abs_p, self.workspace_dir))
         except ValueError:
             return None  # Unità diversa su Windows
         if rel == os.pardir or rel.startswith(os.pardir + os.sep) or os.path.isabs(rel):
             return None
-        # Su Windows il filesystem ignora le maiuscole: allinea alla chiave già registrata
+        # Allineamento case-insensitive alla chiave già registrata
         wanted = os.path.normcase(rel)
         for key in self.invariants:
-            if os.path.normcase(os.path.normpath(key)) == wanted:
+            if os.path.normcase(os.path.normpath(key.replace("\\", os.sep))) == wanted:
                 return key
         return rel
 
