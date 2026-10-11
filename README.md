@@ -97,7 +97,7 @@ Il motore **DEMON** è integrato nel monorepo (`engines/Demon-Engine/`) con tutt
 Oltre ai 6 pilastri autonomi, ciascun motore e HEXAD stesso sono dotati di estensioni operative avanzate, validate su silicio e fisica continua:
 
 * **🌙 LUNAR (Estensione Riflessiva di Emergenza di HEXAD)**:
-  * Integrato direttamente nel core di HEXAD (`lunar_engine.py`, `lunar_mcp.py`).
+  * Integrato direttamente nel core di HEXAD (`lunar_engine.py` e `hexad_mcp.py`).
   * Interviene in sub-millisecondi ($1.8\text{ms}$) solo in caso di shock critico o saturazione, deflettendo colpi ed errori senza azzerare lo stato vitale.
 * **🏛️ DAEDALUS & 🧵 ARIADNE (Estensioni di ANIMA)**:
   * Bussola geodetica anti-loop e blocco di isteresi temporale ($\tau = 1.6\text{s}$) che elimina il *Relay Chattering*.
@@ -143,7 +143,7 @@ Tutto l'ecosistema si avvia con **un unico comando MCP** che espone tutti i **30
 ### 📦 Architettura Ufficiale Monorepo (`./engines/`)
 `Hexad-Engine` è il **Monorepo Unificato e Completo**: include l'intera suite dei 14 motori, le estensioni e la suite di test direttamente nella directory `engines/`. Clonando questa singola repository si ottiene l'intero organismo cibernetico pronto all'uso con **102 test unitari superati al 100% su silicio**.
 
-### 🛠️ 30 Master MCP Tools Esportati
+### 🛠️ 29 Master MCP Tools Esportati
 
 1. **HEXAD Master**:
    * `hexad_bootstrap_project`: Scansiona e blocca gli invarianti dell'autore.

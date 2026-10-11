@@ -26,14 +26,16 @@ import time
 import json
 from pathlib import Path
 
-# Add HEXAD modules to path
-HEXAD_DIR = Path(r"C:\Users\stree\Desktop\HEXAD")
-sys.path.insert(0, str(HEXAD_DIR / "Hexad-Engine"))
-sys.path.insert(0, str(HEXAD_DIR / "Coris-Engine"))
-sys.path.insert(0, str(HEXAD_DIR / "Anima-Engine"))
-sys.path.insert(0, str(HEXAD_DIR / "Mneme-Engine"))
-sys.path.insert(0, str(HEXAD_DIR / "Demon-Engine"))
-sys.path.insert(0, str(HEXAD_DIR / "Peira-Engine"))
+# Add HEXAD modules to path dynamically
+HEXAD_ENGINE_DIR = Path(__file__).resolve().parent.parent
+HEXAD_DIR = HEXAD_ENGINE_DIR.parent
+sys.path.insert(0, str(HEXAD_ENGINE_DIR))
+engines_sub = HEXAD_ENGINE_DIR / "engines"
+if engines_sub.exists():
+    for eng_dir in engines_sub.glob("*-Engine"):
+        sys.path.insert(0, str(eng_dir))
+for eng_name in ["Coris-Engine", "Anima-Engine", "Mneme-Engine", "Demon-Engine", "Peira-Engine", "Oculus-Engine"]:
+    sys.path.insert(0, str(HEXAD_DIR / eng_name))
 
 from hexad_core import HexadOracle
 from coris_polypus import PolypusEngine

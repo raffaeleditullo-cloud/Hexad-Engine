@@ -188,7 +188,7 @@ if __name__ == "__main__":
     print("=== EXECUTING CYBERNETIC TETRAD LIFECYCLE ===")
     res = organism.execute_tetrad_lifecycle(
         intent_query="verify_token SecurityManager auth",
-        workspace_dir=r"c:\Users\stree\Desktop\Oculus-Engine",
+        workspace_dir=os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")),
         candidate_reasoning_traces=sample_branches,
         context_conversation=sample_context
     )

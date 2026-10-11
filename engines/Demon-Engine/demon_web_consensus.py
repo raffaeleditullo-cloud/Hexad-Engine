@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
-from duckduckgo_search import DDGS
+from demon_action_memory import search_duckduckgo_lite
 from demon_engine import DemonEngine, DemonHypothesis
 
 def run_web_consensus(query: str):
@@ -19,20 +19,18 @@ def run_web_consensus(query: str):
     print("=" * 75)
     print(f"\n[QUERY DIGITATA]: \"{query}\"\n")
 
-    # 1. Ricerca sul Web live con DuckDuckGo (ddgs)
-    print("--> Interrogazione DuckDuckGo in corso per raccogliere 3 fonti live...")
+    # 1. Ricerca sul Web live con fallback resiliente
+    print("--> Interrogazione web in corso (DuckDuckGo Lite)...")
     results = []
     try:
-        from ddgs import DDGS
-        with DDGS() as ddgs:
-            raw_results = list(ddgs.text(query, max_results=5))
-            for idx, r in enumerate(raw_results[:3]):
-                results.append({
-                    "id": f"FONTE_{chr(65 + idx)}",
-                    "title": r.get("title", ""),
-                    "snippet": r.get("body", ""),
-                    "url": r.get("href", "")
-                })
+        raw_results = search_duckduckgo_lite(query, limit=5)
+        for idx, r in enumerate(raw_results[:3]):
+            results.append({
+                "id": f"FONTE_{chr(65 + idx)}",
+                "title": r.get("title", ""),
+                "snippet": r.get("snippet", r.get("body", "")),
+                "url": r.get("url", r.get("href", ""))
+            })
     except Exception as e:
         print(f"[!] Errore connessione web: {e}")
         return

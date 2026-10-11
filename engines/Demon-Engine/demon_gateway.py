@@ -42,15 +42,7 @@ if hasattr(sys.stdout, 'reconfigure'):
 # Import core DEMON
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from demon_engine import DemonEngine, DemonHypothesis
-from demon_action_memory import check_kb, save_to_kb, KB_FILE
-
-try:
-    from ddgs import DDGS
-except ImportError:
-    try:
-        from duckduckgo_search import DDGS
-    except ImportError:
-        DDGS = None
+from demon_action_memory import check_kb, save_to_kb, KB_FILE, search_duckduckgo_lite
 
 # Cache in-memory per file audio TTS ad altissima fedeltà
 TTS_CACHE = {}
@@ -172,30 +164,27 @@ class DemonGateway:
             "info": "Nessuna corrispondenza locale. Inoltro al Live Web Consensus (Fase 1)..."
         })
 
-        # Step 3: Live Web Consensus via DDGS
-        if not DDGS:
-            response["stages"].append({
-                "step": 3,
-                "name": "Live Web Consensus",
-                "status": "ERROR",
-                "info": "Modulo ddgs non trovato. Impossibile eseguire ricerca web."
-            })
-            return
-
+        # Step 3: Live Web Consensus (DuckDuckGo Lite con zero dipendenze)
+        raw_results = []
         try:
-            with DDGS() as ddgs:
-                raw_results = list(ddgs.text(query, max_results=3))
+            raw_results = search_duckduckgo_lite(query, limit=3)
         except Exception as e:
             raw_results = []
             response["stages"].append({
                 "step": 3,
                 "name": "Live Web Consensus",
-                "status": "ERROR",
-                "info": f"Errore ricerca DDGS: {str(e)}"
+                "status": "CAUTION",
+                "info": f"Ricerca web parziale o offline: {str(e)}"
             })
 
         if not raw_results:
-            response["details"] = {"answer": "Nessun risultato affidabile reperito dal web."}
+            response["stages"].append({
+                "step": 3,
+                "name": "Live Web Consensus",
+                "status": "OFFLINE_FALLBACK",
+                "info": "Nessun risultato web reperito. Uso sintesi cognitiva locale."
+            })
+            response["details"] = {"answer": f"Informazione non presente in cache locale né raggiungibile sul web per: {query}"}
             return
 
         # Costruzione Ipotesi per DEMON

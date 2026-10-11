@@ -12,7 +12,75 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
-from ddgs import DDGS
+import urllib.request
+import urllib.parse
+import re
+
+try:
+    from ddgs import DDGS
+except ImportError:
+    try:
+        from duckduckgo_search import DDGS
+    except ImportError:
+        DDGS = None
+
+def search_duckduckgo_lite(query: str, limit: int = 5):
+    """
+    Ricerca web resiliente a zero-dipendenze basata su DuckDuckGo Lite.
+    Usa ddgs se installato, altrimenti la libreria standard urllib senza crash.
+    """
+    if DDGS is not None:
+        try:
+            with DDGS() as ddgs:
+                raw = list(ddgs.text(query, max_results=limit))
+                res = []
+                for item in raw:
+                    res.append({
+                        "title": item.get("title", ""),
+                        "url": item.get("href", ""),
+                        "snippet": item.get("body", ""),
+                        "body": item.get("body", ""),
+                        "href": item.get("href", "")
+                    })
+                if res:
+                    return res
+        except Exception:
+            pass
+
+    results = []
+    try:
+        clean_q = query.strip()
+        data = urllib.parse.urlencode({"q": clean_q}).encode("utf-8")
+        req = urllib.request.Request(
+            "https://lite.duckduckgo.com/lite/",
+            data=data,
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        )
+        with urllib.request.urlopen(req, timeout=5.0) as resp:
+            html = resp.read().decode("utf-8", errors="ignore")
+            raw_links = re.findall(r'<a[^>]+rel=[\'"]nofollow[\'"][^>]+href=[\'"]([^\'"]+)[\'"][^>]*>(.*?)</a>', html, re.DOTALL)
+            raw_snippets = re.findall(r'<td[^>]+class=[\'"]result-snippet[\'"][^>]*>(.*?)</td>', html, re.DOTALL)
+            for i in range(min(len(raw_links), len(raw_snippets), limit)):
+                raw_url = raw_links[i][0]
+                real_url = raw_url
+                if "uddg=" in raw_url:
+                    parsed = urllib.parse.parse_qs(urllib.parse.urlsplit(raw_url).query)
+                    if "uddg" in parsed:
+                        real_url = parsed["uddg"][0]
+                title = re.sub(r"<[^>]+>", "", raw_links[i][1]).strip()
+                snip = re.sub(r"<[^>]+>", "", raw_snippets[i]).strip()
+                if title or snip:
+                    results.append({
+                        "title": title,
+                        "url": real_url,
+                        "snippet": snip,
+                        "body": snip,
+                        "href": real_url
+                    })
+    except Exception:
+        pass
+    return results
+
 from demon_engine import DemonEngine, DemonHypothesis
 
 KB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "knowledge_base.json")
@@ -70,18 +138,17 @@ def execute_phase_2(query: str):
 
     print("  [-] Nessun riscontro locale. Avvio ricerca sul web live...")
 
-    # TEST PASSO 2: Web Scraping live con DDGS
+    # TEST PASSO 2: Web Scraping live con fallback DuckDuckGo Lite
     results = []
     try:
-        with DDGS() as ddgs:
-            raw = list(ddgs.text(query, max_results=5))
-            for idx, r in enumerate(raw[:3]):
-                results.append({
-                    "id": f"SRC_{chr(65+idx)}",
-                    "title": r.get("title", ""),
-                    "snippet": r.get("body", ""),
-                    "url": r.get("href", "")
-                })
+        raw = search_duckduckgo_lite(query, limit=5)
+        for idx, r in enumerate(raw[:3]):
+            results.append({
+                "id": f"SRC_{chr(65+idx)}",
+                "title": r.get("title", ""),
+                "snippet": r.get("snippet", r.get("body", "")),
+                "url": r.get("url", r.get("href", ""))
+            })
     except Exception as e:
         print(f"[!] Errore ricerca web: {e}")
         return
