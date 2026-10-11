@@ -67,14 +67,28 @@ Every developer using AI today (Cursor, Copilot, Claude Code, Devin) experiences
                        └───────────────────────────────┘
 ```
 
-| # | Motore | Ruolo Cibernetico | Operatore Matematico | Link Repository |
+| # | Motore | Ruolo Cibernetico | Operatore Matematico | Percorso Monorepo |
 | :-: | :--- | :--- | :--- | :--- |
-| **1** | **OCULUS** | **I Sensi** (Retina & Compressione) | Proiezione Manifold $\mathcal{P}: \mathcal{X} \to \mathcal{M}$ (85-95% Token Savings) | [Oculus-Engine](https://github.com/raffaeleditullo-cloud/Oculus-Engine.git) |
-| **2** | **CORIS** | **Il Cuore** (Omeostasi & Metabolismo) | Free Energy $\mathcal{F} = D_{KL}(q \parallel p) - \mathbb{E}_q[\ln p]$ | [Coris-Engine](https://github.com/raffaeleditullo-cloud/Coris-Engine.git) |
-| **3** | **ANIMA** | **La Mente** (Intento & Minima Azione) | Integrale di Cammino Variazionale $\delta \int (H - \lambda C) dt = 0$ | [Anima-Engine](https://github.com/raffaeleditullo-cloud/Anima-Engine.git) |
-| **4** | **MNEME** | **La Memoria** (Stabilità Asintotica) | Lyapunov Invariant $\dot{V} \le -\alpha \|x-x^*\|^2$ & Ricci Curvature | [Mneme-Engine](https://github.com/raffaeleditullo-cloud/Mneme-Engine.git) |
-| **5** | **DEMON** | **Il Muscolo** (Sandbox & Zero-Blast) | Control Barrier Function $\mathbf{u} \in \mathcal{C}_{safe}, \quad \text{Blast} = 0$ | [Demon-Engine](https://github.com/raffaeleditullo-cloud/Demon-Engine.git) |
-| **6** | **PEIRA** | **Il Crogiolo** (Silicio & Attrito Fisico) | Delta Empirico $\Delta_{\text{emp}} = \|\mathbf{y}_{\text{fisico}} - \hat{\mathbf{y}}_{\text{simulato}}\|$ | [Peira-Engine](https://github.com/raffaeleditullo-cloud/Peira-Engine.git) |
+| **1** | **OCULUS** | **I Sensi** (Retina & Compressione) | Proiezione Manifold $\mathcal{P}: \mathcal{X} \to \mathcal{M}$ (85-95% Token Savings) | `engines/Oculus-Engine/` |
+| **2** | **CORIS** | **Il Cuore** (Omeostasi, 3 Cuori & Vaccini) | Free Energy $\mathcal{F} = D_{KL}(q \parallel p) - \mathbb{E}_q[\ln p]$ | `engines/Coris-Engine/` |
+| **3** | **ANIMA** | **La Mente** (Intento & Minima Azione) | Integrale di Cammino Variazionale $\delta \int (H - \lambda C) dt = 0$ | `engines/Anima-Engine/` |
+| **4** | **MNEME** | **La Memoria** (Stabilità Asintotica) | Lyapunov Invariant $\dot{V} \le -\alpha \|x-x^*\|^2$ & Ricci Curvature | `engines/Mneme-Engine/` |
+| **5** | **DEMON** | **Il Muscolo** (Sandbox & 6 Potenziamenti) | Control Barrier Function $\mathbf{u} \in \mathcal{C}_{safe}, \quad \text{Blast} = 0$ | `engines/Demon-Engine/` |
+| **6** | **PEIRA** | **Il Crogiolo** (Silicio & Attrito Fisico) | Delta Empirico $\Delta_{\text{emp}} = \|\mathbf{y}_{\text{fisico}} - \hat{\mathbf{y}}_{\text{simulato}}\|$ | `engines/Peira-Engine/` |
+
+---
+
+## 🔱 LA DEMON SUITE // I 6 Potenziamenti d'Elite Integrati
+
+Il motore **DEMON** è integrato nel monorepo (`engines/Demon-Engine/`) con tutti i suoi **6 potenziamenti d'elite sovrani**:
+
+1. **`DEMON-CORE`** (*The Quantum Oracle* - Crimson Red): Arbitraggio deterministico basato su interferenza di fase Born-rule ($<0.05\text{ ms}$). Elimina le allucinazioni.
+2. **`DEMON-SYNAPSE`** (*Neural Invariant Distiller* - Electric Cyan): Distillazione pre-inferenza degli invarianti e contratti semantici.
+3. **`DEMON-ARBITER`** (*Code & Diff Reconciler* - Prismatic Violet): Riconciliazione a 3 punti tra prompt, spiegazione LLM e diff su disco. Blocca omissioni silenziose.
+4. **`DEMON-CERBERUS`** (*OS Blast-Radius Shield* - Laser Orange): Sandbox MITRE ATT&CK T1485. Blocca wipe, cancellazioni e comandi catastrofici in $0.04\text{ ms}$.
+5. **`DEMON-FORGE`** (*Auto-Skill Crystallizer* - Emerald Green): Cristallizza bug risolti e logiche verificate in skill locali immutabili a zero token.
+6. **`DEMON-SPECTRE`** (*Deep Web Recon & OSINT Engine* - Radar Blue): Consenso multi-fonte, scraping e triage di fatti oggettivi.
+* **⚡ MYIA & Invarianza Ortogonale**: Riflesso neuromorfico sub-millisecondo con sensore passivo di distress cognitivo e barriera $\langle S_\text{adversary}, \Omega_\text{internal} \rangle = 0$.
 
 ---
 
@@ -86,12 +100,13 @@ Oltre ai 6 pilastri autonomi, ciascun motore e HEXAD stesso sono dotati di esten
   * Integrato direttamente nel core di HEXAD (`lunar_engine.py`, `lunar_mcp.py`).
   * Interviene in sub-millisecondi ($1.8\text{ms}$) solo in caso di shock critico o saturazione, deflettendo colpi ed errori senza azzerare lo stato vitale.
 * **🏛️ DAEDALUS & 🧵 ARIADNE (Estensioni di ANIMA)**:
-  * Bussola geodetica anti-loop e blocco di isteresi temporale ($\tau = 1.6\text{s}$) che elimina il *Relay Chattering* (oscillazione a 60Hz tra decisioni contrastanti).
+  * Bussola geodetica anti-loop e blocco di isteresi temporale ($\tau = 1.6\text{s}$) che elimina il *Relay Chattering*.
 * **⚡ NEMESIS & 🧬 LAMARCK (Estensioni di MNEME)**:
   * **NEMESIS**: Converte la memoria del trauma (ferite e assedio) in energia cinetica di contrattacco (+55% velocità, +35% fire rate).
-  * **LAMARCK**: Adattamento epigenetico continuo in vita. Elimina la trappola della mortalità darwiniana: l'agente che combatte e sopravvive scala di generazione sul campo (fino a Gen 8/9).
-* **🛡️ INVARIANZA ORTOGONALE DI STATO (Estensione di DEMON)**:
-  * $\langle \vec{S}_{\text{adversary}}, \vec{\Omega}_{\text{internal}} \rangle = 0$. Protocollo Zero-Trust contro manipolazione avversaria, droni Trojan, false tregue ed esche di avidità.
+  * **LAMARCK**: Adattamento epigenetico continuo in vita senza mortalità darwiniana (scaling fino a Gen 8/9).
+* **🔮 PROMETHEUS & ⏳ CHRONOS**:
+  * **PROMETHEUS**: Simulazione anticipatoria delle conseguenze (Rosen & MCTS).
+  * **CHRONOS**: Previsione temporale autoregressiva (Google TimesFM) di TTC e indice OHI.
 
 ---
 
@@ -110,53 +125,60 @@ Whenever an AI proposes a code modification:
 
 ---
 
-## 🔌 FastMCP Setup (Claude Desktop, Cursor, Antigravity, Windsurf)
+## 🔌 Unified Master MCP Setup (Lovable, Claude, Cursor, Antigravity)
 
-To attach **HEXAD** to your AI agent, add the following entry to your MCP configuration file (`claude_desktop_config.json` or `.cursor/mcp.json`):
+Tutto l'ecosistema si avvia con **un unico comando MCP** che espone tutti i **30 strumenti master**:
 
 ```json
 {
   "mcpServers": {
     "hexad-engine": {
       "command": "python",
-      "args": ["C:/Users/stree/Desktop/Hexad-Engine/hexad_mcp.py"]
+      "args": ["C:/percorso/HEXAD/Hexad-Engine/hexad_mcp.py"]
     }
   }
 }
 ```
 
-### 📦 Standalone All-In-One Architecture (`./engines/`)
-A partire dalla v2.0, `Hexad-Engine` è completamente **autonomo e autosufficiente**: include l'intera suite dei 6 motori e le estensioni operative direttamente nella directory `engines/`. Non richiede repository esterni per funzionare: clonando `Hexad-Engine` si ottiene l'intero organismo cibernetico pronto all'uso con tutti i motori a `True`.
+### 📦 Architettura Ufficiale Monorepo (`./engines/`)
+`Hexad-Engine` è il **Monorepo Unificato e Completo**: include l'intera suite dei 14 motori, le estensioni e la suite di test direttamente nella directory `engines/`. Clonando questa singola repository si ottiene l'intero organismo cibernetico pronto all'uso con **102 test unitari superati al 100% su silicio**.
 
-### 🛠️ 21 Unified Master MCP Tools Esportati
-`hexad_mcp.py` esporta un'interfaccia unica e completa che racchiude tutte le funzionalità dell'ecosistema:
+### 🛠️ 30 Master MCP Tools Esportati
 
 1. **HEXAD Master**:
    * `hexad_bootstrap_project`: Scansiona e blocca gli invarianti dell'autore.
    * `hexad_verify_author_invariance`: Gate di pre-volo che blocca modifiche non autorizzate al codice sacro.
    * `hexad_execute_cycle`: Esegue il ciclo completo a 6 stadi a ciclo chiuso.
    * `hexad_quarantine_regression`: Registra anticorpi immunitari permanenti contro bug storici.
-   * `hexad_status_telemetry`: Telemetria in tempo reale con stato di tutti i 6 motori + estensioni.
-   * `hexad_export_portable_skill`: Esporta la skill sovrana universale per ChatGPT, Cursor o Claude.
+   * `hexad_calibrate_organism`: Taratura cibernetica immediata, calcolo grado di allucinazione ($H_{\%}$) e sintesi vaccino semantico ($H_{\%} \ge 45\%$).
+   * `hexad_auto_trigger_inspect`: Scansione passiva di distress cognitivo e accusa di frattura con isteresi a due colpi.
+   * `hexad_status_telemetry`: Telemetria in tempo reale con stato di tutti i motori + estensioni.
+   * `hexad_export_portable_skill`: Esporta la skill sovrana universale v3.2.
 2. **1. OCULUS**:
    * `oculus_foveal_scan`: Compressione foveale ad altissima risoluzione (risparmio 90% token).
    * `oculus_project_ast_graph`: Mappa topologica AST delle dipendenze in <10ms.
-3. **2. CORIS**:
-   * `coris_vital_pulse`: Battito emodinamico ed energia libera variazionale a 3 cuori.
-   * `coris_synthesize_antibody`: Sintesi di anticorpi linfatici permanenti.
-4. **3. ANIMA & DAEDALUS**:
+   * `oculus_self_awareness_inspect`: Ispezione ontologica dell'identità dell'agente.
+3. **2. CORIS & POLYPUS**:
+   * `coris_vital_pulse`: Battito emodinamico a 3 cuori (Sistemico, Contesto, Silicio).
+   * `coris_synthesize_antibody`: Sintesi di anticorpi linfatici permanenti in `immune_memory.json`.
+4. **3. ANIMA, PROMETHEUS & DAEDALUS**:
    * `anima_collapse_stream`: Collasso di rami alternativi per minima azione Lagrangiana.
    * `daedalus_evaluate_trajectory_safety`: Navigazione geodetica anti-loop.
    * `daedalus_ariadne_lock`: Blocco di isteresi temporale $\tau = 1.6\text{s}$ anti-chattering.
-5. **4. MNEME**:
+   * `prometheus_simulate_consequences`: Simulazione anticipatoria delle conseguenze (Rosen & MCTS).
+5. **4. MNEME, CHRONOS & NEMESIS**:
    * `mneme_certify_stability`: Certificazione di stabilità asintotica di Lyapunov ($dV/dt < 0$).
    * `mneme_nemesis_retribution`: Retribuzione cinetica da trauma (+55% velocità, contrattacco).
    * `mneme_lamarck_evolution`: Epigenesi continua in vita senza morte (scaling fino a Gen 8/9).
-6. **5. DEMON**:
+   * `chronos_forecast_trajectory`: Previsione serie temporali TTC e indice di salute OHI.
+   * `thymus_negative_selection` & `thymus_synthesize_antibody`: Selezione negativa Forrest 1994.
+6. **5. DEMON (The 6 Abilities & Gate)**:
    * `demon_action_gate`: Controllo deterministico pre-esecuzione sandbox MITRE ATT&CK T1485.
    * `demon_orthogonal_invariance`: Invarianza Ortogonale $\langle S, \Omega \rangle = 0$ contro Trojan ed esche.
-7. **6. PEIRA**:
+   * `myia_inspect_reflex`: Riflesso neuromorfico sub-millisecondo a bitmask.
+7. **6. PEIRA & NOUS**:
    * `peira_execute_sandboxed_trial`: Verifica empirica su silicio e misura del $\Delta_\text{empirico}$.
+   * `nous_formulate_thought`: Riflessione filosofica e assiologica autonoma.
 8. **🌙 LUNAR**:
    * `lunar_execute_failover`: Riflesso involontario di failover istantaneo a $1.8\text{ms}$.
    * `lunar_get_telemetry`: Telemetria e ordine di fase Kuramoto in tempo reale.

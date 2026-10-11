@@ -1,0 +1,12 @@
+# HEXAD — Dipendenze dell'intero sistema
+# Installa con: pip install -r requirements.txt
+# =========================================================
+
+# Matematica numerica (MNEME: Lyapunov, Ricci Flow, autovalori)
+numpy>=1.26.0
+
+# MCP stdio transport (tutti i server MCP dei 6 motori)
+# Nessuna dipendenza esterna aggiuntiva: i server usano solo stdlib (sys, json, os)
+
+# Test runner
+pytest>=8.0.0
